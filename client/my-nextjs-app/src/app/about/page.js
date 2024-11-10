@@ -1,7 +1,7 @@
 export default function About() {
     return (
       <div>
-        <h1>About My Next.js Application</h1>
+        <h1>This is the about page</h1>
       </div>
     );
   }

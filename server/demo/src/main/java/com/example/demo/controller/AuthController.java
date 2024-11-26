@@ -6,6 +6,8 @@ import com.example.demo.service.UserService;
 import com.example.demo.util.JwtUtil;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-// @CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000")
 public class AuthController {
 
     @Autowired
@@ -38,7 +40,13 @@ public class AuthController {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
         String token = jwtUtil.generateToken(loginRequest.getUsername());
-        return ResponseEntity.status(HttpStatus.OK).body(Collections.singletonMap("token", token));
+
+        Map<String, String> store = new HashMap<>(); 
+        store.put("token", token); 
+        //store.put("id", foundUser.getId());
+        store.put("username", foundUser.getUsername());
+        store.put("email", foundUser.getEmail()); 
+        return ResponseEntity.status(HttpStatus.OK).body(store);
     }
 
 }

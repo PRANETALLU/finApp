@@ -24,7 +24,11 @@ export default function Login() {
 
     if (response.ok) {
       console.log('Login successful');
-      setUser(data); 
+      setUser({
+        token: data.token, 
+        username: data.username, 
+        email: data.email
+      }); 
       router.push('/pages/dashboard');
     } else {
       alert('Login failed');

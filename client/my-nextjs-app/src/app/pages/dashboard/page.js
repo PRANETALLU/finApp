@@ -1,162 +1,73 @@
-'use client';
+"use client";
 
-import { useUser } from '../../context/UserContext';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
 import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useUser } from '@/app/context/UserContext';
 
-export default function Dashboard() {
-  const { user } = useUser();
-  const [open, setOpen] = useState(false);
-  const [userInfo, setUserInfo] = useState(null);
-  const [isClient, setIsClient] = useState(false); // State to handle client-side rendering
-  const [formData, setFormData] = useState({
-    role: '',
-    incomeAllow: '',
-    age: '',
-    setAmount: ''
-  });
+const Dashboard = () => {
+    const [dashboardData, setDashboardData] = useState(null);
+    const { user } = useUser(); // Get the user object, which includes the token
 
-  useEffect(() => {
-    setIsClient(true); // Set to true after mounting on the client
-  }, []);
+    useEffect(() => {
+        if (user?.token && user?.id) { // Ensure the token and id exist before making the request
+            axios.get(`http://localhost:8080/api/dashboard/${user.id}`, {
+                headers: {
+                    Authorization: `Bearer ${user.token}`, // Pass the Bearer token here
+                },
+            })
+                .then((response) => {
+                    setDashboardData(response.data);
+                })
+                .catch((error) => {
+                    console.log("There was an error fetching the dashboard data!", error);
+                });
+        }
+    }, [user]); // Dependency includes user to re-fetch if it changes
 
-  const emptyFields = () => {
-    if (!userInfo?.role || !userInfo?.incomeAllow || !userInfo?.age || !userInfo?.setAmount) {
-      setOpen(true); // Open the dialog if any field is empty
+    if (!dashboardData) {
+        return <div>Loading...</div>;
     }
-  };
 
-  useEffect(() => {
-    if (userInfo) {
-      emptyFields();
-    }
-  }, [userInfo]);
+    // Prepare data for the pie chart
+    const chartData = [
+        { name: 'Income', value: parseFloat(dashboardData.totalIncome) },
+        { name: 'Expense', value: parseFloat(dashboardData.totalExpense) },
+    ];
 
-  const getUser = async () => {
-    const response = await fetch(`http://localhost:8080/api/user/${user.username}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        "Authorization": `Bearer ${user.token}`,
-      }
-    });
+    return (
+        <div className="dashboard">
+            <h2>Dashboard</h2>
+            
+            {/* Display pie chart */}
+            <PieChart width={400} height={400}>
+                <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={150} fill="#8884d8">
+                    <Cell name="Income" fill="#82ca9d" />
+                    <Cell name="Expense" fill="#ff4f4f" />
+                </Pie>
+                <Tooltip />
+                <Legend />
+            </PieChart>
 
-    const data = await response.json();
-    if (response.ok) {
-      setUserInfo(data);
-    }
-  };
+            <div className="summary">
+                <h3>Summary</h3>
+                <p>Total Income: {dashboardData.totalIncome}</p>
+                <p>Total Expense: {dashboardData.totalExpense}</p>
+                <p>Net Savings: {dashboardData.netSavings}</p>
+            </div>
+            
+            {/* Display recent transactions */}
+            <div className="transactions">
+                <h3>Recent Transactions</h3>
+                <ul>
+                    {dashboardData.recentTransactions.map((transaction) => (
+                        <li key={transaction.id}>
+                            <strong>{transaction.amount}</strong> - {transaction.category} - {transaction.type} - {new Date(transaction.date).toLocaleDateString()}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </div>
+    );
+};
 
-  useEffect(() => {
-    if (user.token) {
-      getUser();
-    }
-  }, [user]);
-
-  const editUser = async () => {
-    const response = await fetch(`http://localhost:8080/api/user/edit/${user.username}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        "Authorization": `Bearer ${user.token}`,
-      },
-      body: JSON.stringify(formData), // Send form data in the request body
-    });
-
-    const data = await response.json();
-    if (response.ok) {
-      setUserInfo(data); // Update userInfo after successful edit
-      setOpen(false); // Close the dialog
-    }
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value, // Update the respective field
-    });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    editUser(); // Call the editUser function when the form is submitted
-  };
-
-  if (!userInfo) {
-    return null; // Prevent rendering until the component is mounted on the client
-  }
-
-  return (
-    <div>
-      <Dialog
-        open={open}
-        onClose={(e, reason) => { if (reason !== 'backdropClick') setOpen(false); }} // Prevent closing on backdrop click
-      >
-        <DialogTitle>Edit Information</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            required
-            margin="dense"
-            label="Role"
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            fullWidth
-            variant="standard"
-          />
-          <TextField
-            required
-            margin="dense"
-            label="Income Allowance"
-            name="incomeAllow"
-            value={formData.incomeAllow}
-            onChange={handleChange}
-            fullWidth
-            variant="standard"
-          />
-          <TextField
-            required
-            margin="dense"
-            label="Age"
-            name="age"
-            value={formData.age}
-            onChange={handleChange}
-            fullWidth
-            variant="standard"
-          />
-          <TextField
-            required
-            margin="dense"
-            label="Set Amount"
-            name="setAmount"
-            value={formData.setAmount}
-            onChange={handleChange}
-            fullWidth
-            variant="standard"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleSubmit} type="submit">Submit</Button>
-        </DialogActions>
-      </Dialog>
-
-      <h1>Welcome, {user.username}!</h1>
-      <p>Your email: {user.email}</p>
-      <p>Your token: {user.token}</p>
-      <p>{userInfo.role}</p>
-      <p>{userInfo.incomeAllow}</p>
-      <p>{userInfo.age}</p>
-      <p>{userInfo.setAmount}</p>
-    </div>
-  );
-}
+export default Dashboard;

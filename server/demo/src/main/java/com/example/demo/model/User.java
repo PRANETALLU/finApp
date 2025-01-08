@@ -26,7 +26,7 @@ public class User {
     private Integer incomeAllow;
 
     @Column
-    private Integer age; // Changed to Integer
+    private Integer age; // Changed to Integer since it can store null values but not "int"
 
     @Column
     private Integer setAmount; // Changed to Integer

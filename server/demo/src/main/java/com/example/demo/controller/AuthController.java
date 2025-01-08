@@ -44,6 +44,7 @@ public class AuthController {
         Map<String, String> store = new HashMap<>(); 
         store.put("token", token); 
         //store.put("id", foundUser.getId());
+        store.put("id", foundUser.getId().toString());
         store.put("username", foundUser.getUsername());
         store.put("email", foundUser.getEmail()); 
         return ResponseEntity.status(HttpStatus.OK).body(store);

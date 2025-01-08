@@ -26,6 +26,7 @@ export default function Login() {
       console.log('Login successful');
       setUser({
         token: data.token, 
+        id: data.id, 
         username: data.username, 
         email: data.email
       }); 

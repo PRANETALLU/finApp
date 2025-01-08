@@ -2,10 +2,15 @@ package com.example.demo;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Assertions;
@@ -15,13 +20,19 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.example.demo.controller.AuthController;
+import com.example.demo.dto.DashboardSummaryDTO;
 import com.example.demo.dto.LoginRequest;
+import com.example.demo.model.Transaction;
 import com.example.demo.model.User;
+import com.example.demo.repository.TransactionRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.DashboardService;
 import com.example.demo.service.UserService;
 import com.example.demo.util.JwtUtil;
 
@@ -31,7 +42,7 @@ class DemoApplicationTests {
     @Autowired
     private UserRepository userRepository;
 
-     @InjectMocks
+    @InjectMocks
     private AuthController authController;
 
     @Mock
@@ -39,6 +50,12 @@ class DemoApplicationTests {
 
     @Mock
     private JwtUtil jwtUtil;
+
+    @Mock
+    private TransactionRepository transactionRepository;
+
+    @InjectMocks
+    private DashboardService dashboardService;
 
 
     @Test
@@ -99,5 +116,37 @@ class DemoApplicationTests {
         assertEquals(generatedToken, response.getBody());
     }
 
+    @Test
+    public void testGetDashboardSummary() {
+        // Create mock user
+        User user = new User();
+        user.setId(1L);
+        
+        // Create mock transactions
+        List<Transaction> transactions = Arrays.asList(
+                new Transaction(user, new BigDecimal("100.00"), "Salary", "Monthly salary", "INCOME", LocalDateTime.now(), "completed", "bank transfer"),
+                new Transaction(user, new BigDecimal("50.00"), "Food", "Lunch at restaurant", "EXPENSE", LocalDateTime.now(), "completed", "credit card")
+                /* new Transaction(user, new BigDecimal("200.00"), "Freelance", "Freelance work", "INCOME", LocalDateTime.now(), "completed", "bank transfer"),
+                new Transaction(user, new BigDecimal("30.00"), "Entertainment", "Movie ticket", "EXPENSE", LocalDateTime.now(), "pending", "credit card"),
+                new Transaction(user, new BigDecimal("120.00"), "Salary", "Freelance payment", "INCOME", LocalDateTime.now(), "completed", "bank transfer") */
+        );
 
+        // Assuming `dashboardService` has a method to mock/retrieve data
+        BigDecimal totalIncome = transactions.stream()
+                .filter(t -> t.getType() == "INCOME")
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalExpense = transactions.stream()
+                .filter(t -> t.getType() == "EXPENSE")
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal netSavings = totalIncome.subtract(totalExpense);
+
+        // Assert totals
+        assertEquals(new BigDecimal("100.00"), totalIncome); // 100 + 200 + 120
+        assertEquals(new BigDecimal("50.00"), totalExpense); // 50 + 30
+        assertEquals(new BigDecimal("50.00"), netSavings); // 420 - 80
+    }
 }

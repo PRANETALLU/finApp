@@ -15,17 +15,26 @@ public class Budget {
     private User user;
 
     private String category;  // E.g., "Groceries", "Entertainment"
+    
     private BigDecimal amount;  // Set budget amount
 
+    private String description; // Description
+    
     private BigDecimal spentAmount = BigDecimal.ZERO;  // Track spent amount, default to 0
 
     // Constructors, getters, setters
     public Budget() {}
 
-    public Budget(User user, String category, BigDecimal amount) {
+    public Budget(User user, String category, BigDecimal amount, String description) {
         this.user = user;
         this.category = category;
         this.amount = amount;
+        this.description = description;
+    }
+
+    @Transient
+    public BigDecimal getRemainingAmount() {
+        return amount.subtract(spentAmount);
     }
 
     public Long getId() {
@@ -68,13 +77,24 @@ public class Budget {
         this.spentAmount = spentAmount;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     @Override
     public String toString() {
         return "Budget{" +
                 "id=" + id +
+                ", user=" + user.getId() +
                 ", category='" + category + '\'' +
                 ", amount=" + amount +
                 ", spentAmount=" + spentAmount +
+                ", remainingAmount=" + getRemainingAmount() +
+                ", description='" + description + '\'' +
                 '}';
     }
 }

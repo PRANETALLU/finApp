@@ -17,7 +17,7 @@ const Budget = () => {
     useEffect(() => {
         if (user?.token && user?.id) {
             axios
-                .get(`http://localhost:8080/api/users/${user.id}/budgets`, {
+                .get(`http://localhost:8080/api/budgets/${user.id}`, {
                     headers: {
                         Authorization: `Bearer ${user.token}`,
                     },
@@ -40,7 +40,7 @@ const Budget = () => {
 
         try {
             const response = await axios.post(
-                `http://localhost:8080/api/users/${user.id}/budgets`,
+                `http://localhost:8080/api/budgets/${user.id}`,
                 newBudget,
                 {
                     headers: {
@@ -71,7 +71,7 @@ const Budget = () => {
 
         try {
             const response = await axios.put(
-                `http://localhost:8080/api/users/${user.id}/budgets/${editingBudgetId}`,
+                `http://localhost:8080/api/budgets/${user.id}/${editingBudgetId}`,
                 newBudget,
                 {
                     headers: {
@@ -91,7 +91,7 @@ const Budget = () => {
     const handleDeleteBudget = async (id) => {
         try {
             await axios.delete(
-                `http://localhost:8080/api/users/${user.id}/budgets/${id}`,
+                `http://localhost:8080/api/budgets/${user.id}/${id}`,
                 {
                     headers: {
                         Authorization: `Bearer ${user.token}`,

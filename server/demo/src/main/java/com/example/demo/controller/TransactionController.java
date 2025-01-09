@@ -61,8 +61,8 @@ public class TransactionController {
     }
 
     @GetMapping("/{userId}")
-    public List<Transaction> getTransactions(@PathVariable Long userId) {
-        return transactionService.getTransactionsByUserId(userId);
+    public List<Transaction> getTransactions(@PathVariable String userId) {
+        return transactionService.getTransactionsByUserId(Long.parseLong(userId));
     }
 
     @PatchMapping("/changeStatus/{transactionId}")
@@ -75,6 +75,17 @@ public class TransactionController {
 
         // Return the updated transaction in response
         return ResponseEntity.ok(updatedTransaction);
+    }
+
+    @DeleteMapping("/delete/{transactionId}")
+    public ResponseEntity<String> deleteTransaction(@PathVariable Long transactionId) {
+        try {
+            // Call the service to delete the transaction
+            transactionService.deleteTransaction(transactionId);
+            return ResponseEntity.ok("Transaction deleted successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body("Transaction not found");
+        }
     }
 }
 

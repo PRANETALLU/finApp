@@ -52,4 +52,12 @@ public class TransactionService {
         // Save the updated transaction
         return transactionRepository.save(transaction);
     }
+
+    public void deleteTransaction(Long transactionId) {
+        // Check if the transaction exists
+        Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(() -> new RuntimeException("Transaction not found"));
+        
+        // Delete the transaction
+        transactionRepository.delete(transaction);
+    }
 }

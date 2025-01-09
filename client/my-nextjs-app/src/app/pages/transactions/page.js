@@ -14,35 +14,38 @@ const TransactionPage = () => {
     description: '',
     type: 'INCOME',
     paymentMethod: '',
+    status: 'pending',
   });
   const [errorMessage, setErrorMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterPaymentMethod, setFilterPaymentMethod] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
-  const [page, setPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1); // Current page state
   const { user } = useUser();
   const router = useRouter();
 
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 10; // Number of items per page
 
-  // Fetch user transactions with pagination
+  // Fetch all transactions on mount
   useEffect(() => {
     if (user?.token && user?.id) {
       axios
-        .get(`http://localhost:8080/api/transactions/${user.id}?page=${page}&size=${ITEMS_PER_PAGE}`, {
+        .get(`http://localhost:8080/api/transactions/${user.id}`, {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
         })
         .then((response) => {
-          setTransactions(response.data.transactions);
+          const sortedTransactions = (response.data || []).sort((a, b) => new Date(b.date) - new Date(a.date));
+          setTransactions(sortedTransactions);
         })
         .catch((error) => {
           console.log('Error fetching transactions', error);
         });
     }
-  }, [user, page]);
+  }, [user]);
+
 
   const handleAddTransaction = async (e) => {
     e.preventDefault();
@@ -64,6 +67,7 @@ const TransactionPage = () => {
         description: '',
         type: 'INCOME',
         paymentMethod: '',
+        status: 'pending', // Reset status to default
       });
       setErrorMessage('');
     } catch (error) {
@@ -115,13 +119,19 @@ const TransactionPage = () => {
     const matchesType = filterType === 'all' || transaction.type === filterType;
     const matchesPaymentMethod = filterPaymentMethod === '' || transaction.paymentMethod === filterPaymentMethod;
     const matchesStatus = filterStatus === '' || transaction.status === filterStatus;
-  
+
     return matchesSearch && matchesType && matchesPaymentMethod && matchesStatus;
   });
-  
 
-  const handleNextPage = () => setPage(page + 1);
-  const handlePrevPage = () => setPage(page - 1);
+  // Pagination logic on the frontend
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
+
+  const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
+
+  const handleNextPage = () => setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
+  const handlePrevPage = () => setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-500 text-white flex flex-col justify-center items-center py-8">
@@ -220,6 +230,7 @@ const TransactionPage = () => {
           />
         </div>
 
+
         {/* Transaction Table */}
         <table className="min-w-full bg-white border rounded-lg shadow-lg">
           <thead>
@@ -233,33 +244,33 @@ const TransactionPage = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredTransactions.map((transaction) => (
+            {paginatedTransactions.map((transaction) => (
               <tr key={transaction.id}>
-                <td className="px-6 py-4">{transaction.date}</td>
-                <td className="px-6 py-4">{transaction.category}</td>
-                <td className="px-6 py-4">{transaction.amount}</td>
+                <td className="px-6 py-4 text-black">{new Date(transaction.date).toLocaleString()}</td>
+                <td className="px-6 py-4 text-black">{transaction.category}</td>
+                <td className="px-6 py-4 text-black">{transaction.amount}</td>
                 <td
-                  className={`px-6 py-4 ${
-                    transaction.status === 'pending' ? 'bg-yellow-300' : 'bg-green-300'
-                  }`}
+                  className={`px-6 py-4 ${transaction.status === 'pending' ? 'bg-yellow-300' : 'bg-green-300'
+                    }`}
                 >
                   {transaction.status}
                 </td>
-                <td className="px-6 py-4">{transaction.paymentMethod}</td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 text-black">{transaction.paymentMethod}</td>
+                <td className="px-6 py-4 flex justify-start space-x-4">
                   <button
                     onClick={() => handleTransactionStatusChange(transaction.id, transaction.status)}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none"
                   >
                     Toggle Status
                   </button>
                   <button
                     onClick={() => handleDeleteTransaction(transaction.id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 ml-2"
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none"
                   >
                     Delete
                   </button>
                 </td>
+
               </tr>
             ))}
           </tbody>
@@ -269,14 +280,16 @@ const TransactionPage = () => {
         <div className="mt-4 flex justify-between items-center">
           <button
             onClick={handlePrevPage}
-            disabled={page <= 1}
+            disabled={currentPage <= 1}
             className="bg-blue-500 text-white px-6 py-2 rounded-lg disabled:bg-gray-400"
           >
             Previous
           </button>
+          <span className="text-gray-800">{`Page ${currentPage} of ${totalPages}`}</span>
           <button
             onClick={handleNextPage}
-            className="bg-blue-500 text-white px-6 py-2 rounded-lg"
+            disabled={currentPage >= totalPages}
+            className="bg-blue-500 text-white px-6 py-2 rounded-lg disabled:bg-gray-400"
           >
             Next
           </button>

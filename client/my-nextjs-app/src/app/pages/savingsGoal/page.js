@@ -1,151 +1,222 @@
-import React, { useState } from "react";
-import "./SavingsGoals.css"; // Add CSS for styling
+'use client';
 
-const SavingsGoals = () => {
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { useUser } from '@/app/context/UserContext';
+import Navbar from '@/app/components/Navbar';
+
+const SavingsGoalsPage = () => {
   const [goals, setGoals] = useState([]);
-  const [newGoal, setNewGoal] = useState({
-    name: "",
-    targetAmount: "",
-    dateRange: "",
-    savedAmount: 0,
-  });
+  const [newGoal, setNewGoal] = useState({ name: "", targetAmount: "" });
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const { user } = useUser();
+  const userId = user.id; // Replace with dynamic user ID if necessary
 
-  const handleAddGoal = () => {
-    if (!newGoal.name || !newGoal.targetAmount || !newGoal.dateRange) {
+  // Fetch goals on load
+  useEffect(() => {
+    const fetchGoals = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8080/api/goals/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          }
+        );
+        setGoals(response.data);
+      } catch (error) {
+        console.log("Failed to fetch goals:", error);
+      }
+    };
+    fetchGoals();
+  }, [userId]);
+
+  // Add a new goal
+  const handleAddGoal = async () => {
+    if (!newGoal.name || !newGoal.targetAmount) {
       setErrorMessage("Please fill out all fields.");
       return;
     }
-
-    const updatedGoals = [...goals, { ...newGoal, id: Date.now() }];
-    setGoals(updatedGoals);
-    setNewGoal({ name: "", targetAmount: "", dateRange: "", savedAmount: 0 });
-    setErrorMessage("");
-  };
-
-  const handleUpdateSavedAmount = (id, amount) => {
-    const updatedGoals = goals.map((goal) =>
-      goal.id === id
-        ? {
-            ...goal,
-            savedAmount: Math.min(
-              parseFloat(goal.savedAmount) + parseFloat(amount),
-              parseFloat(goal.targetAmount)
-            ),
-          }
-        : goal
-    );
-    setGoals(updatedGoals);
-  };
-
-  const calculateMilestones = (targetAmount) => {
-    const milestones = [];
-    const milestoneStep = targetAmount / 4; // Divide into 4 milestones
-    for (let i = 1; i <= 4; i++) {
-      milestones.push(i * milestoneStep);
+    try {
+      const response = await axios.post(`http://localhost:8080/api/goals/${userId}`, {
+        name: newGoal.name,
+        targetAmount: newGoal.targetAmount,
+      }, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+      setGoals([...goals, response.data]);
+      setNewGoal({ name: "", targetAmount: "" });
+      setIsModalOpen(false);
+      setErrorMessage("");
+    } catch (error) {
+      console.error("Failed to add goal:", error);
+      setErrorMessage("Failed to add goal.");
     }
-    return milestones;
+  };
+
+  // Update saved amount for a goal
+  const handleUpdateSavedAmount = async (goalId) => {
+    const amount = prompt("Enter the amount to add:");
+    if (!amount || isNaN(amount) || Number(amount) <= 0) {
+      alert("Please enter a valid positive number.");
+      return;
+    }
+
+    try {
+      // Sending the amount as part of the request body for PUT request
+      console.log('Done with API 1', typeof(goalId))
+      const response = await axios.put(
+        `http://localhost:8080/api/goals/${goalId}/add-saved-amount`,
+        { amount: Number(amount) },
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+      console.log('Done with API 2')
+      // Update the goal's saved amount in the state
+      setGoals(
+        goals.map((goal) =>
+          goal.id === goalId ? { ...goal, savedAmount: response.data.savedAmount } : goal
+        )
+      );
+      alert("Amount added successfully!");
+    } catch (error) {
+      console.error("Failed to update saved amount:", error);
+      alert("There was an error updating your saved amount.");
+    }
+  };
+
+  // Delete a goal
+  const handleDeleteGoal = async (goalId) => {
+    if (!window.confirm("Are you sure you want to delete this goal?")) return;
+    try {
+      await axios.delete(`http://localhost:8080/api/goals/${goalId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+      setGoals(goals.filter((goal) => goal.id !== goalId));
+    } catch (error) {
+      console.log("Failed to delete goal:", error);
+    }
   };
 
   return (
-    <div className="savings-goals-container">
-      <h1>Savings Goals</h1>
-      <div className="add-goal-form">
-        <h2>Create a Savings Goal</h2>
-        {errorMessage && <p className="error">{errorMessage}</p>}
-        <input
-          type="text"
-          placeholder="Goal Name (e.g., Vacation)"
-          value={newGoal.name}
-          onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })}
-        />
-        <input
-          type="number"
-          placeholder="Target Amount (e.g., 5000)"
-          value={newGoal.targetAmount}
-          onChange={(e) =>
-            setNewGoal({ ...newGoal, targetAmount: e.target.value })
-          }
-        />
-        <input
-          type="text"
-          placeholder="Date Range (e.g., 6 months)"
-          value={newGoal.dateRange}
-          onChange={(e) =>
-            setNewGoal({ ...newGoal, dateRange: e.target.value })
-          }
-        />
-        <button onClick={handleAddGoal}>Add Goal</button>
-      </div>
+    <div className="min-h-screen bg-gray-100 text-gray-800">
+      <Navbar />
+      <div className="container mx-auto p-6">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-green-600">Savings Goals</h1>
+          <p className="text-gray-600">Track and manage your savings effectively.</p>
+        </div>
 
-      <div className="goals-list">
-        <h2>Your Savings Goals</h2>
-        {goals.length === 0 ? (
-          <p>No savings goals yet. Start by adding one above!</p>
-        ) : (
-          goals.map((goal) => (
-            <div key={goal.id} className="goal-card">
-              <h3>{goal.name}</h3>
-              <p>
-                Target Amount: ${goal.targetAmount} | Saved: $
-                {goal.savedAmount.toFixed(2)}
+        {/* Goals List */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {goals.map((goal) => (
+            <div
+              key={goal.id}
+              className="bg-white shadow-md rounded-lg p-6 border border-gray-200"
+            >
+              <h2 className="text-lg font-semibold text-gray-800">{goal.name}</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Target: <span className="font-bold">${goal.targetAmount}</span>
               </p>
-              <div className="progress-bar-container">
+              <p className="text-sm text-gray-600 mt-1">
+                Saved: <span className="font-bold">${goal.savedAmount}</span>
+              </p>
+              <div className="relative w-full bg-gray-300 h-3 rounded-full mt-3">
                 <div
-                  className="progress-bar"
+                  className="absolute top-0 left-0 h-3 bg-green-500 rounded-full"
                   style={{
-                    width: `${
-                      (goal.savedAmount / goal.targetAmount) * 100
-                    }%`,
+                    width: `${(goal.savedAmount / goal.targetAmount) * 100 || 0
+                      }%`,
                   }}
                 ></div>
               </div>
-              <p>
-                Progress:{" "}
-                {Math.min(
-                  ((goal.savedAmount / goal.targetAmount) * 100).toFixed(2),
-                  100
-                )}
-                %
-              </p>
 
-              {/* Milestones */}
-              <div className="milestones">
-                <h4>Milestones:</h4>
-                <ul>
-                  {calculateMilestones(goal.targetAmount).map((milestone, index) => (
-                    <li
-                      key={index}
-                      style={{
-                        color:
-                          goal.savedAmount >= milestone ? "green" : "gray",
-                      }}
-                    >
-                      ${milestone.toFixed(2)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Update Savings */}
-              <div className="update-saved">
-                <input
-                  type="number"
-                  placeholder="Add Amount"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleUpdateSavedAmount(goal.id, e.target.value);
-                      e.target.value = "";
-                    }
-                  }}
-                />
+              <div className="flex space-x-2 mt-4">
+                <button
+                  className="bg-blue-500 text-white py-1 px-4 rounded-lg hover:bg-blue-600"
+                  onClick={() => handleUpdateSavedAmount(goal.id)}
+                >
+                  Add Amount
+                </button>
+                <button
+                  className="bg-red-500 text-white py-1 px-4 rounded-lg hover:bg-red-600"
+                  onClick={() => handleDeleteGoal(goal.id)}
+                >
+                  Delete
+                </button>
               </div>
             </div>
-          ))
-        )}
+          ))}
+        </div>
+
+        {/* Add Goal Button */}
+        <div className="text-center mt-8">
+          <button
+            className="bg-green-500 text-white py-2 px-6 rounded-lg hover:bg-green-600"
+            onClick={() => setIsModalOpen(true)}
+          >
+            Add New Goal
+          </button>
+        </div>
       </div>
+
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold text-gray-800">Add New Goal</h2>
+            <div className="mt-4">
+              <label className="block text-sm text-gray-600">Goal Name</label>
+              <input
+                type="text"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-green-500"
+                value={newGoal.name}
+                onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })}
+              />
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm text-gray-600">Target Amount</label>
+              <input
+                type="number"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-green-500"
+                value={newGoal.targetAmount}
+                onChange={(e) =>
+                  setNewGoal({ ...newGoal, targetAmount: e.target.value })
+                }
+              />
+            </div>
+            {errorMessage && (
+              <p className="text-red-500 text-sm mt-2">{errorMessage}</p>
+            )}
+            <div className="mt-6 flex justify-end space-x-4">
+              <button
+                className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
+                onClick={handleAddGoal}
+              >
+                Save
+              </button>
+              <button
+                className="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400"
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default SavingsGoals;
+export default SavingsGoalsPage;

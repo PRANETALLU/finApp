@@ -20,7 +20,8 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Dashboard', path: '/pages/dashboard' },
     { name: 'Transactions', path: '/pages/transactions' },
-    { name: 'Budgeting', path: '/pages/budget' },
+    { name: 'Budget', path: '/pages/budget' },
+    { name: 'Savings Goals', path: '/pages/savingsGoal' },
     { name: 'Profile', path: '/pages/profile' },
     { name: 'Settings', path: '/pages/settings' }, // Additional page
     { name: 'Help', path: '/pages/help' }, // Additional page

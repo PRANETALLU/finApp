@@ -23,8 +23,6 @@ export default function Navbar() {
     { name: 'Budget', path: '/pages/budget' },
     { name: 'Savings Goals', path: '/pages/savingsGoal' },
     { name: 'Profile', path: '/pages/profile' },
-    { name: 'Settings', path: '/pages/settings' }, // Additional page
-    { name: 'Help', path: '/pages/help' }, // Additional page
   ];
 
   return (

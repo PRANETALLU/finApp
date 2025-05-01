@@ -14,6 +14,7 @@ import com.example.demo.service.UserService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -86,6 +87,22 @@ public class TransactionController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(404).body("Transaction not found");
         }
+    }
+
+    @GetMapping("/expenses/category/total")
+    public ResponseEntity<BigDecimal> getTotalExpenseByCategory(@RequestBody Map<String, String> requestBody) {
+        // Get the current logged-in user's details from the SecurityContext
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        
+        // Fetch the user from the userService
+        User user = userService.findByUsername(username);
+        Long userId = user.getId(); 
+
+        // Get the total expenses for the category
+        BigDecimal totalExpenses = transactionService.getTotalExpensesByCategory(userId, requestBody.get("category"));
+
+        // Return only the total expenses
+        return ResponseEntity.ok(totalExpenses);
     }
 }
 

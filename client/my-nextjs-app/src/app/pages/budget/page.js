@@ -12,6 +12,7 @@ const Budget = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [notification, setNotification] = useState('');
     const [editingBudgetId, setEditingBudgetId] = useState(null);
+    const [expensesByCategory, setExpensesByCategory] = useState({});
 
     // Fetch user's budgets
     useEffect(() => {
@@ -30,6 +31,28 @@ const Budget = () => {
                 });
         }
     }, [user]);
+
+    const calculateExpenseByCategory = async (category) => {
+        try {
+            // Make API call to get total expense by category
+            const response = await axios.get(`http://localhost:8080/api/expenses/category/total`, {
+                headers: {
+                    Authorization: `Bearer ${user.token}`,
+                },
+                params: {
+                    category: category,
+                },
+            });
+
+            // Update the expense state
+            setExpensesByCategory((prevState) => ({
+                ...prevState,
+                [category]: response.data,
+            }));
+        } catch (error) {
+            console.log('Error fetching total expenses by category:', error);
+        }
+    };
 
     const handleAddBudget = async (e) => {
         e.preventDefault();
@@ -110,7 +133,7 @@ const Budget = () => {
 
     const handleBudgetNotification = () => {
         budgets.forEach((budget) => {
-            const progress = calculateBudgetProgress(budget.amount, budget.spentAmount);
+            const progress = calculateBudgetProgress(budget.amount, expensesByCategory[budget.category] || 0);
             if (progress >= 90 && progress < 100) {
                 setNotification(`Warning: You're about to exceed your budget for ${budget.category}!`);
             } else if (progress >= 100) {
@@ -121,7 +144,16 @@ const Budget = () => {
 
     useEffect(() => {
         handleBudgetNotification();
-    }, [budgets]);
+    }, [budgets, expensesByCategory]);
+
+    // Fetch expenses for each category
+    useEffect(() => {
+        if (user?.token && user?.id) {
+            budgets.forEach((budget) => {
+                calculateExpenseByCategory(budget.category);
+            });
+        }
+    }, [user, budgets]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-500 to-blue-500 text-white flex flex-col justify-center items-center py-8">
@@ -183,18 +215,18 @@ const Budget = () => {
                                 <div className="text-gray-600">
                                     <p className="text-sm">{budget.description}</p>
                                     <p className="text-sm">Amount: ${budget.amount}</p>
-                                    <p className="text-sm">Spent: ${budget.spentAmount}</p>
+                                    <p className="text-sm">Spent: ${expensesByCategory[budget.category] || 0}</p>
                                 </div>
                             </div>
                             <div className="mt-4">
                                 <div className="w-full bg-gray-300 h-2 rounded-full">
                                     <div
                                         className="bg-blue-500 h-2 rounded-full"
-                                        style={{ width: `${calculateBudgetProgress(budget.amount, budget.spentAmount)}%` }}
+                                        style={{ width: `${calculateBudgetProgress(budget.amount, expensesByCategory[budget.category] || 0)}%` }}
                                     ></div>
                                 </div>
                                 <p className="mt-2 text-sm text-gray-600">
-                                    {Math.min(calculateBudgetProgress(budget.amount, budget.spentAmount), 100)}% of budget used
+                                    {Math.min(calculateBudgetProgress(budget.amount, expensesByCategory[budget.category] || 0), 100)}% of budget used
                                 </p>
                             </div>
                             <div className="mt-4 flex space-x-4">

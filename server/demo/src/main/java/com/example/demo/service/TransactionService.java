@@ -60,4 +60,8 @@ public class TransactionService {
         // Delete the transaction
         transactionRepository.delete(transaction);
     }
+
+    public BigDecimal getTotalExpensesByCategory(Long userId, String category) {
+        return transactionRepository.getTotalExpensesByCategory(userId, category);
+    }
 }

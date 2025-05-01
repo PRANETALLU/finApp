@@ -66,8 +66,6 @@ const SavingsGoalsPage = () => {
     }
 
     try {
-      // Sending the amount as part of the request body for PUT request
-      console.log('Done with API 1', typeof(goalId))
       const response = await axios.put(
         `http://localhost:8080/api/goals/${goalId}/add-saved-amount`,
         { amount: Number(amount) },
@@ -77,8 +75,6 @@ const SavingsGoalsPage = () => {
           },
         }
       );
-      console.log('Done with API 2')
-      // Update the goal's saved amount in the state
       setGoals(
         goals.map((goal) =>
           goal.id === goalId ? { ...goal, savedAmount: response.data.savedAmount } : goal
@@ -111,10 +107,10 @@ const SavingsGoalsPage = () => {
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800">
       <Navbar />
-      <div className="container mx-auto p-6">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-green-600">Savings Goals</h1>
-          <p className="text-gray-600">Track and manage your savings effectively.</p>
+      <div className="max-w-7xl mx-auto px-6 py-15">
+        <div className="text-center mb-8 pt-14 pb-6">
+          <h1 className="text-4xl font-bold text-green-600 leading-tight">Savings Goals</h1>
+          <p className="text-gray-600 text-lg mt-2">Track and manage your savings effectively.</p>
         </div>
 
         {/* Goals List */}
@@ -122,7 +118,7 @@ const SavingsGoalsPage = () => {
           {goals.map((goal) => (
             <div
               key={goal.id}
-              className="bg-white shadow-md rounded-lg p-6 border border-gray-200"
+              className="bg-white shadow-md rounded-lg p-6 border border-gray-200 hover:shadow-xl transition"
             >
               <h2 className="text-lg font-semibold text-gray-800">{goal.name}</h2>
               <p className="text-sm text-gray-600 mt-1">
@@ -143,13 +139,13 @@ const SavingsGoalsPage = () => {
 
               <div className="flex space-x-2 mt-4">
                 <button
-                  className="bg-blue-500 text-white py-1 px-4 rounded-lg hover:bg-blue-600"
+                  className="bg-blue-500 text-white py-1 px-4 rounded-lg hover:bg-blue-600 transition"
                   onClick={() => handleUpdateSavedAmount(goal.id)}
                 >
                   Add Amount
                 </button>
                 <button
-                  className="bg-red-500 text-white py-1 px-4 rounded-lg hover:bg-red-600"
+                  className="bg-red-500 text-white py-1 px-4 rounded-lg hover:bg-red-600 transition"
                   onClick={() => handleDeleteGoal(goal.id)}
                 >
                   Delete
@@ -162,7 +158,7 @@ const SavingsGoalsPage = () => {
         {/* Add Goal Button */}
         <div className="text-center mt-8">
           <button
-            className="bg-green-500 text-white py-2 px-6 rounded-lg hover:bg-green-600"
+            className="bg-green-500 text-white py-2 px-6 rounded-lg hover:bg-green-600 transition"
             onClick={() => setIsModalOpen(true)}
           >
             Add New Goal
@@ -200,13 +196,13 @@ const SavingsGoalsPage = () => {
             )}
             <div className="mt-6 flex justify-end space-x-4">
               <button
-                className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
+                className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
                 onClick={handleAddGoal}
               >
                 Save
               </button>
               <button
-                className="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400"
+                className="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition"
                 onClick={() => setIsModalOpen(false)}
               >
                 Cancel

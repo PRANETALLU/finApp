@@ -8,7 +8,7 @@ import Navbar from '@/app/components/Navbar';
 const Budget = () => {
     const { user } = useUser();
     const [budgets, setBudgets] = useState([]);
-    const [newBudget, setNewBudget] = useState({ category: '', amount: '', description: '' });
+    const [newBudget, setNewBudget] = useState({ category: '', amount: '', description: '', budgetType: 'monthly', startDate: '', endDate: '' });
     const [errorMessage, setErrorMessage] = useState('');
     const [notification, setNotification] = useState('');
     const [editingBudgetId, setEditingBudgetId] = useState(null);
@@ -34,7 +34,6 @@ const Budget = () => {
 
     const calculateExpenseByCategory = async (category) => {
         try {
-            // Make API call to get total expense by category
             const response = await axios.get(`http://localhost:8080/api/expenses/category/total`, {
                 headers: {
                     Authorization: `Bearer ${user.token}`,
@@ -44,7 +43,6 @@ const Budget = () => {
                 },
             });
 
-            // Update the expense state
             setExpensesByCategory((prevState) => ({
                 ...prevState,
                 [category]: response.data,
@@ -72,7 +70,7 @@ const Budget = () => {
                 }
             );
             setBudgets([...budgets, response.data]);
-            setNewBudget({ category: '', amount: '', description: '' });
+            setNewBudget({ category: '', amount: '', description: '', budgetType: 'monthly', startDate: '', endDate: '' });
             setErrorMessage('');
         } catch (error) {
             setErrorMessage('Failed to add budget.');
@@ -81,7 +79,14 @@ const Budget = () => {
 
     const handleEditBudget = (budget) => {
         setEditingBudgetId(budget.id);
-        setNewBudget({ category: budget.category, amount: budget.amount, description: budget.description });
+        setNewBudget({
+            category: budget.category,
+            amount: budget.amount,
+            description: budget.description,
+            budgetType: budget.budgetType,
+            startDate: budget.startDate,
+            endDate: budget.endDate,
+        });
     };
 
     const handleUpdateBudget = async (e) => {
@@ -103,7 +108,7 @@ const Budget = () => {
                 }
             );
             setBudgets(budgets.map((budget) => (budget.id === editingBudgetId ? response.data : budget)));
-            setNewBudget({ category: '', amount: '', description: '' });
+            setNewBudget({ category: '', amount: '', description: '', budgetType: 'monthly', startDate: '', endDate: '' });
             setEditingBudgetId(null);
             setErrorMessage('');
         } catch (error) {
@@ -146,7 +151,6 @@ const Budget = () => {
         handleBudgetNotification();
     }, [budgets, expensesByCategory]);
 
-    // Fetch expenses for each category
     useEffect(() => {
         if (user?.token && user?.id) {
             budgets.forEach((budget) => {
@@ -161,22 +165,40 @@ const Budget = () => {
             <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg mt-8">
                 <h1 className="text-3xl font-semibold mb-6 text-gray-800 text-center">Budgeting</h1>
 
-                {/* Error Message */}
                 {errorMessage && <p className="text-red-500 text-sm mb-4">{errorMessage}</p>}
 
-                {/* New Budget Form */}
-                <form
-                    onSubmit={editingBudgetId ? handleUpdateBudget : handleAddBudget}
-                    className="space-y-4"
-                >
+                <form onSubmit={editingBudgetId ? handleUpdateBudget : handleAddBudget} className="space-y-4">
                     <div className="flex space-x-4">
-                        <input
-                            type="text"
-                            placeholder="Category"
+                        <select
                             value={newBudget.category}
                             onChange={(e) => setNewBudget({ ...newBudget, category: e.target.value })}
                             className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
-                        />
+                        >
+                            <option value="" disabled>Select Category</option>
+                            {/* Add all your categories here */}
+                            <option value="GROCERIES">Groceries</option>
+                            <option value="UTILITIES">Utilities</option>
+                            <option value="RENT">Rent</option>
+                            <option value="ENTERTAINMENT">Entertainment</option>
+                            <option value="TRANSPORTATION">Transportation</option>
+                            <option value="HEALTHCARE">Healthcare</option>
+                            <option value="INSURANCE">Insurance</option>
+                            <option value="SUBSCRIPTIONS">Subscriptions</option>
+                            <option value="LOANS">Loans</option>
+                            <option value="CREDIT_CARD_PAYMENT">Credit Card Payment</option>
+                            <option value="TRAVEL">Travel</option>
+                            <option value="EDUCATION">Education</option>
+                            <option value="SHOPPING">Shopping</option>
+                            <option value="PETS">Pets</option>
+                            <option value="GIFTS">Gifts</option>
+                            <option value="TAXES">Taxes</option>
+                            <option value="DINING">Dining</option>
+                            <option value="CHARITY">Charity</option>
+                            <option value="HOUSEHOLD">Household</option>
+                            <option value="PERSONAL_CARE">Personal Care</option>
+                            <option value="INVESTMENTS">Investments</option>
+                            <option value="MISC_EXPENSE">Misc Expense</option>
+                        </select>
                         <input
                             type="number"
                             placeholder="Amount"
@@ -192,16 +214,35 @@ const Budget = () => {
                         className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
                         rows="4"
                     />
+                    <div className="flex space-x-4">
+                        <input
+                            type="datetime-local"
+                            value={newBudget.startDate}
+                            onChange={(e) => setNewBudget({ ...newBudget, startDate: e.target.value })}
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
+                        />
+                        <input
+                            type="datetime-local"
+                            value={newBudget.endDate}
+                            onChange={(e) => setNewBudget({ ...newBudget, endDate: e.target.value })}
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
+                        />
+                    </div>
+                    <select
+                        value={newBudget.budgetType}
+                        onChange={(e) => setNewBudget({ ...newBudget, budgetType: e.target.value })}
+                        className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
+                    >
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
                     <button
                         type="submit"
-                        className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 focus:outline-none"
+                        className="w-full p-3 bg-blue-500 rounded-lg text-white font-semibold"
                     >
                         {editingBudgetId ? 'Update Budget' : 'Add Budget'}
                     </button>
                 </form>
-
-                {/* Notification */}
-                {notification && <p className="text-yellow-500 mt-4">{notification}</p>}
 
                 {/* Budget List */}
                 <div className="mt-8 space-y-4">
@@ -247,6 +288,7 @@ const Budget = () => {
                     ))}
                 </div>
             </div>
+            {notification && <div className="text-red-500 mt-4">{notification}</div>}
         </div>
     );
 };

@@ -164,13 +164,38 @@ const TransactionPage = () => {
             </select>
           </div>
           <div className="flex space-x-4">
-            <input
-              type="text"
-              placeholder="Category"
+            <select
               value={newTransaction.category}
-              onChange={(e) => setNewTransaction({ ...newTransaction, category: e.target.value })}
+              onChange={(e) =>
+                setNewTransaction({ ...newTransaction, category: e.target.value })
+              }
               className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
-            />
+            >
+              <option value="" disabled>Select Category</option>
+              <option value="GROCERIES">Groceries</option>
+              <option value="UTILITIES">Utilities</option>
+              <option value="RENT">Rent</option>
+              <option value="ENTERTAINMENT">Entertainment</option>
+              <option value="TRANSPORTATION">Transportation</option>
+              <option value="HEALTHCARE">Healthcare</option>
+              <option value="INSURANCE">Insurance</option>
+              <option value="SUBSCRIPTIONS">Subscriptions</option>
+              <option value="LOANS">Loans</option>
+              <option value="CREDIT_CARD_PAYMENT">Credit Card Payment</option>
+              <option value="TRAVEL">Travel</option>
+              <option value="EDUCATION">Education</option>
+              <option value="SHOPPING">Shopping</option>
+              <option value="PETS">Pets</option>
+              <option value="GIFTS">Gifts</option>
+              <option value="TAXES">Taxes</option>
+              <option value="DINING">Dining</option>
+              <option value="CHARITY">Charity</option>
+              <option value="HOUSEHOLD">Household</option>
+              <option value="PERSONAL_CARE">Personal Care</option>
+              <option value="INVESTMENTS">Investments</option>
+              <option value="MISC_EXPENSE">Misc Expense</option>
+            </select>
+
             <input
               type="text"
               placeholder="Payment Method"

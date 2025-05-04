@@ -53,7 +53,7 @@ export default function Navbar() {
         </button>
 
         {/* Navigation Links (Desktop) */}
-        <ul className="hidden lg:flex space-x-6 text-base font-medium">
+        <ul className="hidden lg:flex space-x-6 text-base font-medium bg-transparent text-gray-500">
           {navLinks.map((link) => (
             <li key={link.name}>
               <Link href={link.path} className="hover:text-blue-300">

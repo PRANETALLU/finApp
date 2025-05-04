@@ -2,6 +2,7 @@ package com.example.demo.model;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 public class Budget {
@@ -22,14 +23,22 @@ public class Budget {
     
     private BigDecimal spentAmount = BigDecimal.ZERO;  // Track spent amount, default to 0
 
+    private String budgetType;  // "monthly" or "yearly"
+
+    private LocalDateTime startDate; // Start date (e.g., first of the month)
+    private LocalDateTime endDate;   // End date (e.g., last day of the month or year)
+
     // Constructors, getters, setters
     public Budget() {}
 
-    public Budget(User user, String category, BigDecimal amount, String description) {
+    public Budget(User user, String category, BigDecimal amount, String description, String budgetType, LocalDateTime startDate, LocalDateTime endDate) {
         this.user = user;
         this.category = category;
         this.amount = amount;
         this.description = description;
+        this.budgetType = budgetType;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 
     @Transient
@@ -85,6 +94,30 @@ public class Budget {
         this.description = description;
     }
 
+    public String getBudgetType() {
+        return budgetType;
+    }
+
+    public void setBudgetType(String budgetType) {
+        this.budgetType = budgetType;
+    }
+
+    public LocalDateTime getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDateTime startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDateTime getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDateTime endDate) {
+        this.endDate = endDate;
+    }
+
     @Override
     public String toString() {
         return "Budget{" +
@@ -95,6 +128,10 @@ public class Budget {
                 ", spentAmount=" + spentAmount +
                 ", remainingAmount=" + getRemainingAmount() +
                 ", description='" + description + '\'' +
+                ", budgetType='" + budgetType + '\'' +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
                 '}';
     }
 }
+

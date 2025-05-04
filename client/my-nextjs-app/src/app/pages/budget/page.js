@@ -33,8 +33,10 @@ const Budget = () => {
     }, [user]);
 
     const calculateExpenseByCategory = async (category) => {
+        console.log('User', user)
+        console.log('Category', category)
         try {
-            const response = await axios.get(`http://localhost:8080/api/expenses/category/total`, {
+            const response = await axios.get(`http://localhost:8080/api/transactions/expenses/category/total`, {
                 headers: {
                     Authorization: `Bearer ${user.token}`,
                 },
@@ -42,6 +44,8 @@ const Budget = () => {
                     category: category,
                 },
             });
+
+            console.log(response.data)
 
             setExpensesByCategory((prevState) => ({
                 ...prevState,
@@ -251,27 +255,34 @@ const Budget = () => {
                             key={budget.id}
                             className="bg-gray-100 p-6 rounded-lg shadow-md hover:shadow-xl transition duration-300"
                         >
-                            <div className="flex justify-between items-center">
-                                <h2 className="text-xl text-gray-800">{budget.category}</h2>
-                                <div className="text-gray-600">
-                                    <p className="text-sm">{budget.description}</p>
-                                    <p className="text-sm">{budget.budgetType}</p>
-                                    <p className="text-sm">Amount: ${budget.amount}</p>
-                                    <p className="text-sm">Spent: ${expensesByCategory[budget.category] || 0}</p>
+                            {/* Header */}
+                            <div className="flex justify-between items-start mb-4">
+                                <h2 className="text-xl font-semibold text-gray-800">{budget.category}</h2>
+                                <div className="text-sm text-gray-600 space-y-1 text-right">
+                                    <p>{budget.description}</p>
+                                    <p className="capitalize">{budget.budgetType}</p>
+                                    <p>Amount: ${budget.amount}</p>
+                                    <p>Spent: ${expensesByCategory[budget.category] || 0}</p>
+                                    <p>
+                                        From: {new Date(budget.startDate).toLocaleDateString()} <br />
+                                        To: {new Date(budget.endDate).toLocaleDateString()}
+                                    </p>
                                 </div>
                             </div>
-                            <div className="mt-4">
+
+                            {/* Progress Bar */}
+                            <div className="mb-4">
                                 <div className="w-full bg-gray-300 h-2 rounded-full">
                                     <div
                                         className="bg-blue-500 h-2 rounded-full"
                                         style={{ width: `${calculateBudgetProgress(budget.amount, expensesByCategory[budget.category] || 0)}%` }}
                                     ></div>
                                 </div>
-                                <p className="mt-2 text-sm text-gray-600">
-                                    {Math.min(calculateBudgetProgress(budget.amount, expensesByCategory[budget.category] || 0), 100)}% of budget used
-                                </p>
+                                <p className="mt-2 text-sm text-gray-600">{Math.min(calculateBudgetProgress(budget.amount, expensesByCategory[budget.category] || 0), 100)}% of budget used</p>
                             </div>
-                            <div className="mt-4 flex space-x-4">
+
+                            {/* Actions */}
+                            <div className="flex space-x-4">
                                 <button
                                     onClick={() => handleEditBudget(budget)}
                                     className="w-full bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 focus:outline-none"

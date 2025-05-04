@@ -172,6 +172,7 @@ const TransactionPage = () => {
               className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
             >
               <option value="" disabled>Select Category</option>
+              <option value="SALARY">Salary</option>
               <option value="GROCERIES">Groceries</option>
               <option value="UTILITIES">Utilities</option>
               <option value="RENT">Rent</option>

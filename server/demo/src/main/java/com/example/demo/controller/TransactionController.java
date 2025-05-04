@@ -90,7 +90,7 @@ public class TransactionController {
     }
 
     @GetMapping("/expenses/category/total")
-    public ResponseEntity<BigDecimal> getTotalExpenseByCategory(@RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<BigDecimal> getTotalExpenseByCategory(@RequestParam String category) {
         // Get the current logged-in user's details from the SecurityContext
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         
@@ -99,7 +99,7 @@ public class TransactionController {
         Long userId = user.getId(); 
 
         // Get the total expenses for the category
-        BigDecimal totalExpenses = transactionService.getTotalExpensesByCategory(userId, requestBody.get("category"));
+        BigDecimal totalExpenses = transactionService.getTotalExpensesByCategory(userId, category);
 
         // Return only the total expenses
         return ResponseEntity.ok(totalExpenses);

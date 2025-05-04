@@ -255,6 +255,7 @@ const Budget = () => {
                                 <h2 className="text-xl text-gray-800">{budget.category}</h2>
                                 <div className="text-gray-600">
                                     <p className="text-sm">{budget.description}</p>
+                                    <p className="text-sm">{budget.budgetType}</p>
                                     <p className="text-sm">Amount: ${budget.amount}</p>
                                     <p className="text-sm">Spent: ${expensesByCategory[budget.category] || 0}</p>
                                 </div>

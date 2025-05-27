@@ -25,7 +25,7 @@ public class TransactionController {
     private TransactionService transactionService;
 
     @Autowired
-    private UserService userService; 
+    private UserService userService;
 
     @GetMapping("/total")
     public BigDecimal getTotalAmountByType(@RequestParam Long userId, @RequestParam String type) {
@@ -41,8 +41,9 @@ public class TransactionController {
     public ResponseEntity<Transaction> addTransaction(@RequestBody Transaction transaction) {
         // Get the current logged-in user's details from the SecurityContext
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        
-        // Fetch the user from the userService (implement user fetching logic from your database)
+
+        // Fetch the user from the userService (implement user fetching logic from your
+        // database)
         User user = userService.findByUsername(username); // Or use the user ID from the JWT token if applicable
 
         if (user == null) {
@@ -56,7 +57,7 @@ public class TransactionController {
 
         // Add the transaction using the service
         Transaction savedTransaction = transactionService.addTransaction(transaction, user);
-        
+
         // Return the saved transaction
         return ResponseEntity.status(201).body(savedTransaction);
     }
@@ -67,10 +68,11 @@ public class TransactionController {
     }
 
     @PatchMapping("/changeStatus/{transactionId}")
-    public ResponseEntity<Transaction> changeStatus(@PathVariable Long transactionId, @RequestBody StatusUpdateRequest statusUpdateRequest) {
+    public ResponseEntity<Transaction> changeStatus(@PathVariable Long transactionId,
+            @RequestBody StatusUpdateRequest statusUpdateRequest) {
         // Determine updated status
         String updatedStatus = statusUpdateRequest.getStatus();
-        
+
         // Update the transaction status using the service
         Transaction updatedTransaction = transactionService.updateTransactionStatus(transactionId, updatedStatus);
 
@@ -93,10 +95,10 @@ public class TransactionController {
     public ResponseEntity<BigDecimal> getTotalExpenseByCategory(@RequestParam String category) {
         // Get the current logged-in user's details from the SecurityContext
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        
+
         // Fetch the user from the userService
         User user = userService.findByUsername(username);
-        Long userId = user.getId(); 
+        Long userId = user.getId();
 
         // Get the total expenses for the category
         BigDecimal totalExpenses = transactionService.getTotalExpensesByCategory(userId, category);
@@ -104,5 +106,19 @@ public class TransactionController {
         // Return only the total expenses
         return ResponseEntity.ok(totalExpenses);
     }
-}
 
+    @GetMapping("/total/range")
+    public ResponseEntity<BigDecimal> getTotalAmountByTypeAndDateRange(
+            @RequestParam Long userId,
+            @RequestParam String type,
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+
+        LocalDateTime start = LocalDateTime.parse(startDate);
+        LocalDateTime end = LocalDateTime.parse(endDate);
+
+        BigDecimal total = transactionService.getTotalAmountByTypeAndDateRange(userId, type, start, end);
+        return ResponseEntity.ok(total);
+    }
+
+}

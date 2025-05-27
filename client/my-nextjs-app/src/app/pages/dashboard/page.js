@@ -4,11 +4,26 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useUser } from '@/app/context/UserContext';
 import Link from 'next/link';
-import { PieChart, Pie, Cell, Tooltip } from 'recharts';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Legend,
+  CartesianGrid,
+  LineChart,
+  Line,
+  ResponsiveContainer,
+} from 'recharts';
 import Navbar from '@/app/components/Navbar';
 
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
+  const [transactions, setTransactions] = useState(null);
   const { user } = useUser();
 
   useEffect(() => {
@@ -28,6 +43,25 @@ const Dashboard = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (user?.token && user?.id) {
+      axios
+        .get(`http://localhost:8080/api/transactions/${user?.id}`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        })
+        .then((response) => {
+          setTransactions(response.data);
+        })
+        .catch((error) => {
+          console.error('Error fetching dashboard data:', error);
+        });
+    }
+  }, [user]);
+
+  console.log(transactions)
+
   if (!dashboardData) {
     return <div>Loading...</div>;
   }
@@ -37,6 +71,74 @@ const Dashboard = () => {
     { name: 'Income', value: parseFloat(dashboardData.totalIncome) },
     { name: 'Expense', value: parseFloat(dashboardData.totalExpense) },
   ];
+
+  const categoryExpenseMap = {};
+
+  if (transactions) {
+    transactions.forEach((tx) => {
+      if (tx.type === 'EXPENSE') {
+        const category = tx.category || 'Uncategorized';
+        if (!categoryExpenseMap[category]) {
+          categoryExpenseMap[category] = 0;
+        }
+        categoryExpenseMap[category] += tx.amount;
+      }
+    });
+  }
+
+  const categoryChartData = Object.entries(categoryExpenseMap).map(([key, value]) => ({
+    name: key,
+    value: value,
+  }));
+
+
+  // Monthly Income & Expense
+  const incomeExpenseByMonth = {};
+  transactions?.forEach((t) => {
+    const date = new Date(t.date);
+    const month = date.toLocaleString('default', { month: 'short', year: 'numeric' });
+    if (!incomeExpenseByMonth[month]) {
+      incomeExpenseByMonth[month] = { month, income: 0, expense: 0 };
+    }
+    if (t.type === 'INCOME') {
+      incomeExpenseByMonth[month].income += t.amount;
+    } else {
+      incomeExpenseByMonth[month].expense += t.amount;
+    }
+  });
+  const monthlyChartData = Object.values(incomeExpenseByMonth);
+
+  // Savings Contributions Over Time
+  const savingsData = transactions
+    ?.filter((t) => t.category === 'Savings Contribution')
+    ?.map((t) => ({
+      date: new Date(t.date).toLocaleDateString(),
+      amount: t.amount,
+    }));
+
+  const cumulativeData = [];
+
+  if (transactions) {
+    const sorted = [...transactions].sort(
+      (a, b) => new Date(a.date) - new Date(b.date)
+    );
+
+    let balance = 0;
+
+    for (const tx of sorted) {
+      if (tx.type === 'INCOME') {
+        balance += tx.amount;
+      } else {
+        balance -= tx.amount;
+      }
+
+      cumulativeData.push({
+        date: new Date(tx.date).toLocaleDateString(),
+        balance: parseFloat(balance.toFixed(2)),
+      });
+    }
+  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-300">
@@ -88,6 +190,88 @@ const Dashboard = () => {
               <Tooltip />
             </PieChart>
           </div>
+
+          {/* Expense Breakdown by Category */}
+          <div className="flex justify-center items-center flex-col mb-8">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              Expense Breakdown by Category
+            </h3>
+            <PieChart width={400} height={400}>
+              <Pie
+                data={categoryChartData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={130}
+                label
+              >
+                {categoryChartData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={
+                      [
+                        '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28BD4', '#FF6384', '#36A2EB'
+                      ][index % 7]
+                    }
+                  />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend verticalAlign="bottom" height={36} />
+            </PieChart>
+          </div>
+
+          <div className="mb-8">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4 text-center">
+              Monthly Income vs Expense
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={monthlyChartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="income" fill="#00C49F" />
+                <Bar dataKey="expense" fill="#FF8042" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="mb-8">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4 text-center">
+              Savings Contributions Over Time
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={savingsData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="amount" stroke="#8884d8" activeDot={{ r: 8 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Cumulative Balance Over Time */}
+          <div className="flex justify-center items-center flex-col mb-8">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              Cumulative Balance Over Time
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={cumulativeData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="balance" stroke="#8884d8" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+
 
           {/* Recent Transactions */}
           <div>

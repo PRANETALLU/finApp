@@ -24,6 +24,7 @@ import Navbar from '@/app/components/Navbar';
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [transactions, setTransactions] = useState(null);
+  const [currentPredict, setCurrentPredict] = useState(null);
   const { user } = useUser();
 
   useEffect(() => {
@@ -56,6 +57,22 @@ const Dashboard = () => {
         })
         .catch((error) => {
           console.error('Error fetching dashboard data:', error);
+        });
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user?.token && user?.id) {
+      axios
+        .post(`http://127.0.0.1:5000/predict-expense`, {
+          userId: user.id,
+          token: user.token,
+        })
+        .then((response) => {
+          setCurrentPredict(response.data)
+        })
+        .catch((error) => {
+          console.log('Error fetching anomalies', error);
         });
     }
   }, [user]);
@@ -139,6 +156,22 @@ const Dashboard = () => {
     }
   }
 
+  const predicted = currentPredict?.predicted_next_3_months_expense || [];
+  const previous = currentPredict?.previous_months_expense || [];
+
+  const expensePredictionData = [
+    ...previous.map((item) => ({
+      month: item.month,
+      amount: item.amount,
+      type: "Actual"
+    })),
+    ...predicted.map((item) => ({
+      month: item.month,
+      amount: item.amount,
+      type: "Predicted"
+    }))
+  ];
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-300">
@@ -192,7 +225,7 @@ const Dashboard = () => {
           </div>
 
           {/* Expense Breakdown by Category */}
-          <div className="flex justify-center items-center flex-col mb-8">
+          <div className="flex justify-center items-center flex-col mb-20">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">
               Expense Breakdown by Category
             </h3>
@@ -271,6 +304,57 @@ const Dashboard = () => {
             </ResponsiveContainer>
           </div>
 
+          {expensePredictionData.length > 0 && (
+            <div className="p-4 border rounded-xl shadow bg-white dark:bg-neutral-800">
+              <h2 className="text-lg font-semibold mb-4">Expense Forecast</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={expensePredictionData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+
+                  {/* Single connected line */}
+                  <Line
+                    type="monotone"
+                    dataKey="amount"
+                    name="Combined"
+                    stroke="#a3a3a3"
+                    strokeWidth={2}
+                    dot={false}
+                    connectNulls={true}
+                    isAnimationActive={false}
+                  />
+
+                  {/* Actual: overlay dots only */}
+                  <Line
+                    type="monotone"
+                    dataKey={(d) => (d.type === "Actual" ? d.amount : null)}
+                    name="Actual"
+                    stroke="#34d399"
+                    strokeWidth={3}
+                    dot={{ r: 4, stroke: "#34d399", strokeWidth: 2, fill: "white" }}
+                    connectNulls={false}
+                    legendType="circle"
+                  />
+
+                  {/* Predicted: overlay dashed line & dots */}
+                  <Line
+                    type="monotone"
+                    dataKey={(d) => (d.type === "Predicted" ? d.amount : null)}
+                    name="Predicted"
+                    stroke="#8b5cf6"
+                    strokeWidth={3}
+                    strokeDasharray="5 5"
+                    dot={{ r: 4, stroke: "#8b5cf6", strokeWidth: 2, fill: "white" }}
+                    connectNulls={false}
+                    legendType="line"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
 
           {/* Recent Transactions */}

@@ -8,6 +8,7 @@ import Navbar from '@/app/components/Navbar'; // Import the Navbar component
 
 const TransactionPage = () => {
   const [transactions, setTransactions] = useState([]);
+  const [anomalies, setAnomalies] = useState([]);
   const [newTransaction, setNewTransaction] = useState({
     amount: '',
     category: '',
@@ -45,6 +46,24 @@ const TransactionPage = () => {
         });
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user?.token && user?.id) {
+      axios
+        .post(`http://127.0.0.1:5000/detect-anomalies`, {
+          userId: user.id,
+          token: user.token,
+        })
+        .then((response) => {
+          setAnomalies(response.data)
+        })
+        .catch((error) => {
+          console.log('Error fetching anomalies', error);
+        });
+    }
+  }, [user]);
+
+  console.log(anomalies)
 
 
   const handleAddTransaction = async (e) => {
@@ -267,6 +286,7 @@ const TransactionPage = () => {
               <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600">Status</th>
               <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600">Payment Method</th>
               <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600">Actions</th>
+              <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600"></th>
             </tr>
           </thead>
           <tbody>
@@ -296,7 +316,13 @@ const TransactionPage = () => {
                     Delete
                   </button>
                 </td>
-
+                <td>
+                  {anomalies.some(anomaly => anomaly.id === transaction.id) && (
+                    <span className="bg-red-100 text-red-700 px-2 py-1 text-xs rounded-md font-semibold" title="Anomaly detected">
+                      ⚠️ 
+                    </span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

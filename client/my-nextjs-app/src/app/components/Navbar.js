@@ -52,10 +52,13 @@ export default function Navbar() {
         </button>
 
         {/* Navigation Links (Desktop) */}
-        <ul className="hidden lg:flex space-x-6 text-base font-medium bg-transparent text-gray-500">
+        <ul className="hidden lg:flex space-x-4 items-center bg-transparent">
           {navLinks.map((link) => (
             <li key={link.name}>
-              <Link href={link.path} className="hover:text-blue-300">
+              <Link
+                href={link.path}
+                className="bg-indigo-500 text-white px-4 py-2 rounded-lg font-semibold shadow-md hover:bg-indigo-700 transition"
+              >
                 {link.name}
               </Link>
             </li>
@@ -66,22 +69,22 @@ export default function Navbar() {
             <li className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-white text-indigo-600 font-semibold hover:bg-gray-100 transition"
               >
                 <img
-                  src="/path/to/avatar.jpg" // Replace with actual avatar URL or default
+                  src="/path/to/avatar.jpg"
                   alt="Avatar"
-                  className="w-8 h-8 rounded-full border-2 border-white"
+                  className="w-8 h-8 rounded-full border-2 border-indigo-600"
                 />
                 <span className="hidden lg:block">{user.name}</span>
               </button>
 
               {/* Dropdown Menu */}
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-lg shadow-lg">
+                <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-lg shadow-lg z-50 animate-fade-in">
                   <button
                     onClick={handleLogout}
-                    className="block w-full px-4 py-2 text-left hover:bg-indigo-600 hover:text-white"
+                    className="block w-full px-4 py-2 text-left text-sm hover:bg-indigo-600 hover:text-white transition rounded-b-lg"
                   >
                     Logout
                   </button>

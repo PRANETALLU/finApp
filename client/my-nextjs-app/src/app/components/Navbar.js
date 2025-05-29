@@ -22,7 +22,6 @@ export default function Navbar() {
     { name: 'Transactions', path: '/pages/transactions' },
     { name: 'Budget', path: '/pages/budget' },
     { name: 'Savings Goals', path: '/pages/savingsGoal' },
-    { name: 'Profile', path: '/pages/profile' },
   ];
 
   return (
@@ -80,9 +79,6 @@ export default function Navbar() {
               {/* Dropdown Menu */}
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-lg shadow-lg">
-                  <Link href="/pages/profile">
-                    <div className="block px-4 py-2 hover:bg-indigo-600 hover:text-white">Profile Settings</div>
-                  </Link>
                   <button
                     onClick={handleLogout}
                     className="block w-full px-4 py-2 text-left hover:bg-indigo-600 hover:text-white"
@@ -94,56 +90,6 @@ export default function Navbar() {
             </li>
           )}
         </ul>
-
-        {/* Mobile Menu (Responsive) */}
-        {isMenuOpen && (
-          <div className="lg:hidden absolute top-16 right-0 bg-indigo-600 text-white w-48 shadow-lg rounded-lg">
-            {navLinks.map((link) => (
-              <Link key={link.name} href={link.path}>
-                <div
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-4 py-2 hover:bg-indigo-500"
-                >
-                  {link.name}
-                </div>
-              </Link>
-            ))}
-
-            {/* Avatar with Dropdown for Mobile */}
-            {user && (
-              <div className="relative">
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center space-x-2 px-4 py-2 w-full hover:bg-indigo-500"
-                >
-                  <img
-                    src="/path/to/avatar.jpg" // Replace with actual avatar URL or default
-                    alt="Avatar"
-                    className="w-8 h-8 rounded-full border-2 border-white"
-                  />
-                  <span className="hidden lg:block">{user.name}</span>
-                </button>
-
-                {/* Mobile Dropdown Menu */}
-                {isDropdownOpen && (
-                  <div className="absolute left-0 mt-2 w-48 bg-white text-black rounded-lg shadow-lg">
-                    <Link href="/pages/profile">
-                      <div className="block px-4 py-2 hover:bg-indigo-600 hover:text-white">
-                        Profile Settings
-                      </div>
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full px-4 py-2 text-left hover:bg-indigo-600 hover:text-white"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </nav>
   );

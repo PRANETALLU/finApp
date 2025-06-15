@@ -164,7 +164,7 @@ const Budget = () => {
     }, [user, budgets]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-500 to-blue-500 text-white flex flex-col justify-center items-center py-8">
+        <div className="min-h-screen bg-gradient-to-br from-green-500 to-blue-500 text-white flex flex-col justify-center items-center pt-24 pb-8">
             <Navbar />
             <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg mt-8">
                 <h1 className="text-3xl font-semibold mb-6 text-gray-800 text-center">Budgeting</h1>
@@ -218,18 +218,18 @@ const Budget = () => {
                         className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
                         rows="4"
                     />
-                    <div className="flex space-x-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <input
                             type="datetime-local"
                             value={newBudget.startDate}
                             onChange={(e) => setNewBudget({ ...newBudget, startDate: e.target.value })}
-                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
+                            className="p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
                         />
                         <input
                             type="datetime-local"
                             value={newBudget.endDate}
                             onChange={(e) => setNewBudget({ ...newBudget, endDate: e.target.value })}
-                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
+                            className="p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
                         />
                     </div>
                     <select
@@ -275,10 +275,18 @@ const Budget = () => {
                                 <div className="w-full bg-gray-300 h-2 rounded-full">
                                     <div
                                         className="bg-blue-500 h-2 rounded-full"
-                                        style={{ width: `${calculateBudgetProgress(budget.amount, expensesByCategory[budget.category] || 0)}%` }}
+                                        style={{
+                                            width: `${Math.min(
+                                                calculateBudgetProgress(budget.amount, expensesByCategory[budget.category] || 0),
+                                                100
+                                            )}%`,
+                                        }}
                                     ></div>
                                 </div>
-                                <p className="mt-2 text-sm text-gray-600">{Math.min(calculateBudgetProgress(budget.amount, expensesByCategory[budget.category] || 0), 100)}% of budget used</p>
+                                <p className="mt-2 text-sm text-gray-600">
+                                    {Math.min(calculateBudgetProgress(budget.amount, expensesByCategory[budget.category] || 0), 100)}% of budget used
+                                </p>
+
                             </div>
 
                             {/* Actions */}

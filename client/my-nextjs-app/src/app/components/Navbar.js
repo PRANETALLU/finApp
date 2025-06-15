@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/context/UserContext';
 
@@ -10,6 +10,7 @@ export default function Navbar() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const handleLogout = () => {
     setUser(null);
@@ -24,67 +25,66 @@ export default function Navbar() {
     { name: 'Savings Goals', path: '/pages/savingsGoal' },
   ];
 
-  return (
-    <nav className="fixed top-0 w-full bg-indigo-600 text-white shadow-md py-3 px-6 z-50">
-      <div className="container mx-auto flex justify-between items-center">
-        {/* Logo */}
-        <h1 className="text-2xl font-bold text-white">FinApp</h1>
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-        {/* Hamburger Icon */}
+
+  return (
+    <nav className="fixed top-0 w-full bg-indigo-600 text-white shadow-md z-50">
+      <div className="w-full max-w-screen-xl mx-auto flex justify-between items-center px-6 py-4">
+
+        {/* Logo */}
+        <h1 className="text-2xl font-bold">FinApp</h1>
+
+        {/* Hamburger */}
         <button
-          className="lg:hidden text-white focus:outline-none"
+          className="lg:hidden focus:outline-none"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Toggle Menu"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor"
             className="h-6 w-6"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M4 6h16M4 12h16M4 18h16"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
 
         {/* Navigation Links (Desktop) */}
-        <ul className="hidden lg:flex space-x-4 items-center bg-transparent">
+        <ul className="hidden lg:flex items-center gap-6">
           {navLinks.map((link) => (
             <li key={link.name}>
-              <Link
-                href={link.path}
-                className="bg-indigo-500 text-white px-4 py-2 rounded-lg font-semibold shadow-md hover:bg-indigo-700 transition"
-              >
-                {link.name}
+              <Link href={link.path}>
+                <span className="cursor-pointer px-4 py-2 rounded-md font-medium hover:bg-indigo-700 transition">
+                  {link.name}
+                </span>
               </Link>
             </li>
           ))}
 
-          {/* Avatar with Dropdown */}
           {user && (
-            <li className="relative">
+            <li className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-white text-indigo-600 font-semibold hover:bg-gray-100 transition"
+                className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 transition focus:outline-none"
               >
-                <img
-                  src="/path/to/avatar.jpg"
-                  alt="Avatar"
-                  className="w-8 h-8 rounded-full border-2 border-indigo-600"
-                />
                 <span className="hidden lg:block">{user.name}</span>
               </button>
 
-              {/* Dropdown Menu */}
+              {/* Dropdown */}
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded-lg shadow-lg z-50 animate-fade-in">
+                <div className="absolute right-0 mt-2 w-44 bg-white text-black rounded-lg shadow-md z-50">
                   <button
                     onClick={handleLogout}
-                    className="block w-full px-4 py-2 text-left text-sm hover:bg-indigo-600 hover:text-white transition rounded-b-lg"
+                    className="block w-full text-left px-4 py-2 text-sm hover:bg-indigo-600 hover:text-white rounded-b-md transition"
                   >
                     Logout
                   </button>
@@ -94,6 +94,35 @@ export default function Navbar() {
           )}
         </ul>
       </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="lg:hidden bg-indigo-600 px-6 pb-4">
+          <ul className="flex flex-col gap-4">
+            {navLinks.map((link) => (
+              <li key={link.name}>
+                <Link href={link.path}>
+                  <span className="block px-4 py-2 rounded-md font-medium hover:bg-indigo-700 transition">
+                    {link.name}
+                  </span>
+                </Link>
+              </li>
+            ))}
+
+            {user && (
+              <li>
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-sm rounded-md hover:bg-indigo-700 transition"
+                >
+                  Logout
+                </button>
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
     </nav>
+
   );
 }

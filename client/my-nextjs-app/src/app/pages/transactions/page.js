@@ -153,7 +153,7 @@ const TransactionPage = () => {
   const handlePrevPage = () => setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-500 text-white flex flex-col justify-center items-center py-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-500 text-white flex flex-col justify-center items-center pt-24 pb-8">
       {/* Navbar Component */}
       <Navbar />
 
@@ -277,56 +277,59 @@ const TransactionPage = () => {
 
 
         {/* Transaction Table */}
-        <table className="min-w-full bg-white border rounded-lg shadow-lg">
-          <thead>
-            <tr>
-              <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600">Date</th>
-              <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600">Category</th>
-              <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600">Amount</th>
-              <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600">Status</th>
-              <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600">Payment Method</th>
-              <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600">Actions</th>
-              <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedTransactions.map((transaction) => (
-              <tr key={transaction.id}>
-                <td className="px-6 py-4 text-black">{new Date(transaction.date).toLocaleString()}</td>
-                <td className="px-6 py-4 text-black">{transaction.category}</td>
-                <td className="px-6 py-4 text-black">{transaction.amount}</td>
-                <td
-                  className={`px-6 py-4 ${transaction.status === 'pending' ? 'bg-yellow-300' : 'bg-green-300'
-                    }`}
-                >
-                  {transaction.status}
-                </td>
-                <td className="px-6 py-4 text-black">{transaction.paymentMethod}</td>
-                <td className="px-6 py-4 flex justify-start space-x-4">
-                  <button
-                    onClick={() => handleTransactionStatusChange(transaction.id, transaction.status)}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none"
-                  >
-                    Toggle Status
-                  </button>
-                  <button
-                    onClick={() => handleDeleteTransaction(transaction.id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none"
-                  >
-                    Delete
-                  </button>
-                </td>
-                <td>
-                  {anomalies.some(anomaly => anomaly.id === transaction.id) && (
-                    <span className="bg-red-100 text-red-700 px-2 py-1 text-xs rounded-md font-semibold" title="Anomaly detected">
-                      ⚠️ 
-                    </span>
-                  )}
-                </td>
+        <div className="overflow-x-auto">
+
+          <table className="w-full bg-white border rounded-lg shadow-lg">
+            <thead>
+              <tr>
+                <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600">Date</th>
+                <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600">Category</th>
+                <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600">Amount</th>
+                <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600">Status</th>
+                <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600">Payment Method</th>
+                <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600">Actions</th>
+                <th className="px-6 py-3 bg-gray-200 text-left text-sm font-medium text-gray-600"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {paginatedTransactions.map((transaction) => (
+                <tr key={transaction.id}>
+                  <td className="px-6 py-4 text-black">{new Date(transaction.date).toLocaleString()}</td>
+                  <td className="px-6 py-4 text-black">{transaction.category}</td>
+                  <td className="px-6 py-4 text-black">{transaction.amount}</td>
+                  <td
+                    className={`px-6 py-4 ${transaction.status === 'pending' ? 'bg-yellow-300' : 'bg-green-300'
+                      }`}
+                  >
+                    {transaction.status}
+                  </td>
+                  <td className="px-6 py-4 text-black">{transaction.paymentMethod}</td>
+                  <td className="px-6 py-4 flex justify-start space-x-4">
+                    <button
+                      onClick={() => handleTransactionStatusChange(transaction.id, transaction.status)}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none"
+                    >
+                      Toggle Status
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTransaction(transaction.id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                  <td>
+                    {anomalies.some(anomaly => anomaly.id === transaction.id) && (
+                      <span className="bg-red-100 text-red-700 px-2 py-1 text-xs rounded-md font-semibold" title="Anomaly detected">
+                        ⚠️
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Pagination */}
         <div className="mt-4 flex justify-between items-center">

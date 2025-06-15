@@ -107,7 +107,7 @@ const SavingsGoalsPage = () => {
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800">
       <Navbar />
-      <div className="max-w-7xl mx-auto px-6 py-15">
+      <div className="max-w-7xl mx-auto px-6 pt-24 pb-15">
         <div className="text-center mb-8 pt-14 pb-6">
           <h1 className="text-4xl font-bold text-green-600 leading-tight">Savings Goals</h1>
           <p className="text-gray-600 text-lg mt-2">Track and manage your savings effectively.</p>

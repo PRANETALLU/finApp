@@ -179,7 +179,7 @@ const Dashboard = () => {
       <Navbar />
 
       {/* Main Content */}
-      <div className="container mx-auto pt-20 px-6">
+      <div className="container mx-auto pt-28 px-6">
         <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
           {/* Dashboard Header */}
           <h2 className="text-3xl font-semibold mb-6 text-center text-gray-800">
@@ -305,8 +305,8 @@ const Dashboard = () => {
           </div>
 
           {expensePredictionData.length > 0 && (
-            <div className="p-4 border rounded-xl shadow bg-white dark:bg-neutral-800">
-              <h2 className="text-lg font-semibold mb-4">Expense Forecast</h2>
+            <div className="flex justify-center items-center flex-col mb-8">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Expense Forecast</h2>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={expensePredictionData}>
                   <CartesianGrid strokeDasharray="3 3" />

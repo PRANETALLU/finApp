@@ -154,8 +154,6 @@ const TransactionPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-500 text-white flex flex-col justify-center items-center pt-24 pb-8">
-      {/* Navbar Component */}
-      <Navbar />
 
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl mt-8">
         <h1 className="text-3xl font-semibold mb-6 text-gray-800 text-center">Transactions</h1>

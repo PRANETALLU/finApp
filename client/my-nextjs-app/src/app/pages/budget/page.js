@@ -165,7 +165,6 @@ const Budget = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-500 to-blue-500 text-white flex flex-col justify-center items-center pt-24 pb-8">
-            <Navbar />
             <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg mt-8">
                 <h1 className="text-3xl font-semibold mb-6 text-gray-800 text-center">Budgeting</h1>
 

@@ -175,9 +175,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-300">
-      {/* Navbar */}
-      <Navbar />
-
+      
       {/* Main Content */}
       <div className="container mx-auto pt-28 px-6">
         <div className="bg-white rounded-lg shadow-lg p-8 mb-8">

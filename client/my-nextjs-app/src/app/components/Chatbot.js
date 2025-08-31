@@ -3,8 +3,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X } from "lucide-react"; // nice icons
+import { useUser } from "../context/UserContext";
 
 export default function Chatbot() {
+  const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     { sender: "bot", text: "Hi! How can I help you today?" },
@@ -19,22 +21,48 @@ export default function Chatbot() {
     }
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
-    // Add user message
+    // Add user message locally
     const newMessages = [...messages, { sender: "user", text: input }];
     setMessages(newMessages);
+    const userMessage = input;
     setInput("");
 
-    // Fake bot reply (replace with API call later)
-    setTimeout(() => {
+    try {
+      // Call your Flask backend
+      const response = await fetch("http://127.0.0.1:5000/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,       // Replace with actual logged-in user ID
+          token: user.token,   // Replace with auth token if needed
+          message: userMessage,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Append bot response
+        setMessages((prev) => [...prev, { sender: "bot", text: data.response }]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { sender: "bot", text: `Error: ${data.error}` },
+        ]);
+      }
+    } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { sender: "bot", text: "I received: " + input },
+        { sender: "bot", text: "Error: Could not connect to server" },
       ]);
-    }, 600);
+    }
   };
+
 
   return (
     <div>
@@ -60,16 +88,14 @@ export default function Chatbot() {
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`flex ${
-                  msg.sender === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"
+                  }`}
               >
                 <div
-                  className={`px-3 py-2 rounded-lg max-w-[75%] shadow ${
-                    msg.sender === "user"
+                  className={`px-3 py-2 rounded-lg max-w-[75%] shadow ${msg.sender === "user"
                       ? "bg-indigo-600 text-white"
                       : "bg-gray-200 text-gray-800"
-                  }`}
+                    }`}
                 >
                   {msg.text}
                 </div>

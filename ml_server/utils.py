@@ -122,7 +122,7 @@ def fetch_user_financial_data(user_id, token):
     
     transactions = requests.get(f"http://localhost:8080/api/transactions/{user_id}", headers=headers).json()
     budgets = requests.get(f"http://localhost:8080/api/budgets/{user_id}", headers=headers).json()
-    savings_goals = requests.get(f"http://localhost:8080/api/savings-goals/{user_id}", headers=headers).json()
+    savings_goals = requests.get(f"http://localhost:8080/api/goals/{user_id}", headers=headers).json()
     
     return {
         "transactions": transactions,
@@ -151,7 +151,7 @@ def generate_ai_financial_response(user_data, user_message):
         """
 
     response = openai.ChatCompletion.create(
-        model="gpt-4",
+        model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a financial assistant."},
             {"role": "user", "content": prompt}

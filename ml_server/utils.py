@@ -2,6 +2,8 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor, IsolationForest
 import requests
 from dateutil.relativedelta import relativedelta
+import openai
+
 
 def fetch_transactions(user_id, token):
     url = f"http://localhost:8080/api/transactions/{user_id}"
@@ -9,6 +11,9 @@ def fetch_transactions(user_id, token):
     response = requests.get(url, headers=headers)
     response.raise_for_status()
     return response.json()
+
+
+# Predict Expenses
 
 def predict_expense(transactions):
     df = pd.DataFrame(transactions)
@@ -82,6 +87,8 @@ def predict_expense(transactions):
     }
 
 
+# Detect Anomalies
+
 def detect_anomalies(transactions):
     df = pd.DataFrame(transactions)
     df['date'] = pd.to_datetime(df['date'])
@@ -100,3 +107,57 @@ def detect_anomalies(transactions):
     anomalies['date'] = anomalies['date'].astype(str)
 
     return anomalies.to_dict(orient='records')
+
+
+# Chat Logic
+
+openai.api_key = "YOUR_OPENAI_API_KEY"
+
+# Function 1: Fetch financial data from Spring Boot backend
+def fetch_user_financial_data(user_id, token):
+    """
+    Fetch all relevant user financial data from the backend.
+    """
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    transactions = requests.get(f"http://localhost:8080/api/transactions/{user_id}", headers=headers).json()
+    budgets = requests.get(f"http://localhost:8080/api/budgets/{user_id}", headers=headers).json()
+    savings_goals = requests.get(f"http://localhost:8080/api/savings-goals/{user_id}", headers=headers).json()
+    
+    return {
+        "transactions": transactions,
+        "budgets": budgets,
+        "savings_goals": savings_goals
+    }
+
+
+# Function 2: Generate AI response using OpenAI
+def generate_ai_financial_response(user_data, user_message):
+    """
+    Sends the user's financial data and their message to OpenAI
+    and returns a personalized response.
+    """
+    # Prepare the prompt
+    prompt = f"""
+        You are a helpful financial assistant. The user's financial data is below:
+
+        Transactions: {user_data['transactions']}
+        Budgets: {user_data['budgets']}
+        Savings Goals: {user_data['savings_goals']}
+
+        The user asked: "{user_message}"
+
+        Provide a clear, concise, and actionable response that considers the user's financial data.
+        """
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are a financial assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.7,
+        max_tokens=400
+    )
+
+    return response['choices'][0]['message']['content']

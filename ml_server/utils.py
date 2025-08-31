@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor, IsolationForest
 import requests
 from dateutil.relativedelta import relativedelta
-import openai
+import openai, os
 
 
 def fetch_transactions(user_id, token):
@@ -111,7 +111,7 @@ def detect_anomalies(transactions):
 
 # Chat Logic
 
-openai.api_key = "YOUR_OPENAI_API_KEY"
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Function 1: Fetch financial data from Spring Boot backend
 def fetch_user_financial_data(user_id, token):

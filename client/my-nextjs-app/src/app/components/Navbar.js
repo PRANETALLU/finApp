@@ -62,10 +62,11 @@ export default function Navbar() {
         <ul className="hidden lg:flex items-center gap-6">
           {navLinks.map((link) => (
             <li key={link.name}>
-              <Link href={link.path}>
-                <span className="cursor-pointer px-4 py-2 rounded-md font-medium hover:bg-indigo-700 transition">
-                  {link.name}
-                </span>
+              <Link
+                href={link.path}
+                className="cursor-pointer px-4 py-2 rounded-md font-medium text-white bg-transparent hover:bg-indigo-700 transition"
+              >
+                {link.name}
               </Link>
             </li>
           ))}
@@ -81,7 +82,7 @@ export default function Navbar() {
 
               {/* Dropdown */}
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-white text-black rounded-lg shadow-md z-50">
+                <div className="absolute right-0 mt-2 w-44 bg-white text-black rounded-lg shadow-md z-[100]">
                   <button
                     onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 text-sm hover:bg-indigo-600 hover:text-white rounded-b-md transition"

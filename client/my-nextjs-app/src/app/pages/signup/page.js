@@ -1,26 +1,94 @@
-// src/app/signup/page.js
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function Signup() {
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState(''); // New state for email
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
   const router = useRouter();
 
-  const handleSignup = async () => {
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
+  // Password strength checker
+  useEffect(() => {
+    if (password === '') {
+      setPasswordStrength(0);
+      return;
+    }
+    
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/\d/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    
+    setPasswordStrength(strength);
+  }, [password]);
+
+  const getPasswordStrengthColor = () => {
+    if (passwordStrength <= 2) return 'bg-red-500';
+    if (passwordStrength <= 3) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
+  const getPasswordStrengthText = () => {
+    if (passwordStrength === 0) return '';
+    if (passwordStrength <= 2) return 'Weak';
+    if (passwordStrength <= 3) return 'Medium';
+    return 'Strong';
+  };
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMessage('');
+
+    // Validation
+    if (!username || !email || !password || !confirmPassword) {
+      setErrorMessage('All fields are required.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMessage('Passwords do not match.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (password.length < 8) {
+      setErrorMessage('Password must be at least 8 characters long.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setErrorMessage('Please enter a valid email address.');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      console.log("From Signup Page", username, email, password); 
+      console.log("From Signup Page", username, email, password);
       const response = await fetch('http://localhost:8080/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, email, password }), // Include email in the request body
+        body: JSON.stringify({ username, email, password }),
       });
 
       if (!response.ok) {
@@ -29,56 +97,246 @@ export default function Signup() {
       }
 
       const result = await response.json();
-      router.push('/pages/dashboard');
+      router.push('/pages/login?message=Account created successfully! Please log in.');
 
     } catch (error) {
-      setErrorMessage('Signup failed. Please try again later.');
+      setErrorMessage(error.message || 'Signup failed. Please try again later.');
     }
+
+    setIsSubmitting(false);
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-500 to-green-500 text-white py-10">
-      <div className="bg-white text-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h1 className="text-3xl font-semibold text-center mb-6">Create Your Account</h1>
-        <div className="space-y-4">
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
-          <button
-            onClick={handleSignup}
-            className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition"
-          >
-            Sign Up
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse" style={{ animationDelay: '4s' }}></div>
+      </div>
+
+      {/* Back to Welcome */}
+      <div className="absolute top-8 left-8 z-20">
+        <Link 
+          href="/" 
+          className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors duration-300 group"
+        >
+          <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Home
+        </Link>
+      </div>
+
+      <div className="relative z-10 flex flex-col justify-center items-center min-h-screen py-16 px-4 sm:px-6 lg:px-8">
+        
+        {/* Signup Card */}
+        <div className={`bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl w-full max-w-md p-6 border border-white/50 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-10 scale-95'}`}>
+          
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <span className="text-white font-bold text-2xl">✨</span>
+            </div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+              Join FinApp
+            </h1>
+            <p className="text-gray-600 text-sm">Create your account and start managing your finances</p>
+          </div>
+
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r-lg animate-shake">
+              <div className="flex items-center">
+                <span className="text-xl mr-3">⚠️</span>
+                {errorMessage}
+              </div>
+            </div>
+          )}
+
+          {/* Signup Form */}
+          <form onSubmit={handleSignup} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Username</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Choose a username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full p-3 pl-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800 bg-gray-50 hover:bg-white transition-colors duration-300"
+                  disabled={isSubmitting}
+                />
+                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  👤
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Email Address</label>
+              <div className="relative">
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full p-4 pl-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800 bg-gray-50 hover:bg-white transition-colors duration-300"
+                  disabled={isSubmitting}
+                />
+                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  📧
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Create a strong password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-4 pl-12 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800 bg-gray-50 hover:bg-white transition-colors duration-300"
+                  disabled={isSubmitting}
+                />
+                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  🔐
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-600 transition-colors duration-300"
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
+              
+              {/* Password Strength Indicator */}
+              {password && (
+                <div className="mt-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full transition-all duration-300 ${getPasswordStrengthColor()}`}
+                        style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs text-gray-600 font-medium min-w-fit">
+                      {getPasswordStrengthText()}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Confirm Password</label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full p-4 pl-12 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800 bg-gray-50 hover:bg-white transition-colors duration-300"
+                  disabled={isSubmitting}
+                />
+                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  🔒
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-600 transition-colors duration-300"
+                >
+                  {showConfirmPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
+              
+              {/* Password Match Indicator */}
+              {confirmPassword && (
+                <div className="mt-2">
+                  <div className={`text-xs flex items-center gap-2 ${password === confirmPassword ? 'text-green-600' : 'text-red-600'}`}>
+                    <span>{password === confirmPassword ? '✅' : '❌'}</span>
+                    {password === confirmPassword ? 'Passwords match' : 'Passwords do not match'}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting || password !== confirmPassword || !username || !email || !password}
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-xl hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {isSubmitting ? (
+                <span className="flex items-center justify-center gap-3">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Creating Account...
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-3">
+                  ✨ Create Account
+                </span>
+              )}
+            </button>
+          </form>
+
+          {/* Terms and Privacy */}
           <div className="mt-4 text-center">
-            <p className="text-sm">
-              Already have an account?{' '}
-              <Link href="/pages/login" className="text-blue-500 hover:underline">
-                Log in
-              </Link>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              By creating an account, you agree to our{' '}
+              <a href="#" className="text-purple-600 hover:underline">Terms of Service</a>
+              {' '}and{' '}
+              <a href="#" className="text-purple-600 hover:underline">Privacy Policy</a>
             </p>
+          </div>
+
+          {/* Divider */}
+          <div className="my-6 flex items-center">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+            <span className="px-4 text-gray-500 text-sm">Already have an account?</span>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+          </div>
+
+          {/* Login Link */}
+          <div className="text-center">
+            <Link 
+              href="/pages/login" 
+              className="group inline-flex items-center gap-2 text-purple-600 hover:text-indigo-600 font-medium transition-colors duration-300"
+            >
+              <span>Sign in to your account</span>
+              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
+        }
+
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
+        }
+      `}</style>
     </div>
   );
 }

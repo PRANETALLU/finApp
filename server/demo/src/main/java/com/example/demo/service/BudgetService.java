@@ -21,7 +21,7 @@ public class BudgetService {
     private BudgetRepository budgetRepository;
 
     @Autowired
-    private UserRepository userRepository; 
+    private UserRepository userRepository;
 
     // Create or update a budget for a specific user
     public Budget saveBudget(Long userId, Budget budget) {
@@ -30,7 +30,7 @@ public class BudgetService {
         }
 
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
         budget.setUser(user);
 
         // Initialize new budgets with proper defaults
@@ -47,8 +47,8 @@ public class BudgetService {
     // Get a budget by its ID and user ID (with reset check)
     public Optional<Budget> getBudgetById(Long userId, Long budgetId) {
         return budgetRepository.findById(budgetId)
-            .filter(budget -> budget.getUser().getId().equals(userId))
-            .map(this::checkAndResetBudget);
+                .filter(budget -> budget.getUser().getId().equals(userId))
+                .map(this::checkAndResetBudget);
     }
 
     // Get all budgets for a specific user (with reset check)
@@ -66,10 +66,10 @@ public class BudgetService {
             if (!budget.getUser().getId().equals(userId)) {
                 throw new IllegalArgumentException("Budget does not belong to the specified user.");
             }
-            
+
             // Check and reset budget first
             budget = checkAndResetBudget(budget);
-            
+
             // Update spent amount
             budget.setSpentAmount(newSpentAmount);
             return budgetRepository.save(budget);
@@ -86,10 +86,10 @@ public class BudgetService {
             if (!budget.getUser().getId().equals(userId)) {
                 throw new IllegalArgumentException("Budget does not belong to the specified user.");
             }
-            
+
             // Check and reset budget first
             budget = checkAndResetBudget(budget);
-            
+
             // Add to spent amount
             BigDecimal currentSpent = budget.getSpentAmount() != null ? budget.getSpentAmount() : BigDecimal.ZERO;
             budget.setSpentAmount(currentSpent.add(amountToAdd));
@@ -99,59 +99,50 @@ public class BudgetService {
         }
     }
 
-    // Enhanced auto-reset logic
-    private Budget checkAndResetBudget(Budget budget) {
-        LocalDate today = LocalDate.now();
-        boolean needsReset = false;
-        LocalDate newResetDate = null;
-
-        if ("monthly".equalsIgnoreCase(budget.getBudgetType())) {
-            LocalDate currentMonthStart = YearMonth.from(today).atDay(1);
-            
-            // Reset if last reset was before current month
-            if (budget.getLastResetDate() == null || 
-                budget.getLastResetDate().isBefore(currentMonthStart)) {
-                needsReset = true;
-                newResetDate = currentMonthStart;
-            }
-        } 
-        else if ("yearly".equalsIgnoreCase(budget.getBudgetType())) {
-            LocalDate currentYearStart = LocalDate.of(today.getYear(), 1, 1);
-            
-            // Reset if last reset was before current year
-            if (budget.getLastResetDate() == null || 
-                budget.getLastResetDate().getYear() < today.getYear()) {
-                needsReset = true;
-                newResetDate = currentYearStart;
-            }
-        }
-
-        if (needsReset) {
-            budget.setSpentAmount(BigDecimal.ZERO);
-            budget.setLastResetDate(newResetDate);
-            budget = budgetRepository.save(budget);
-            
-            // Log the reset for debugging
-            System.out.println("Budget reset for user " + budget.getUser().getId() + 
-                             ", category: " + budget.getCategory() + 
-                             ", type: " + budget.getBudgetType() + 
-                             ", reset date: " + newResetDate);
-        }
-
-        return budget;
-    }
-
     // Helper method to get the current period start date
     private LocalDate getCurrentPeriodStart(String budgetType) {
         LocalDate today = LocalDate.now();
-        
+
         if ("monthly".equalsIgnoreCase(budgetType)) {
-            return YearMonth.from(today).atDay(1);
+            return today.withDayOfMonth(1); // Start of the current month
         } else if ("yearly".equalsIgnoreCase(budgetType)) {
-            return LocalDate.of(today.getYear(), 1, 1);
+            return today.withDayOfYear(1); // Start of the current year
         }
-        
+
         return today; // fallback
+    }
+
+    // Enhanced auto-reset logic for rolling budgets
+    private Budget checkAndResetBudget(Budget budget) {
+        LocalDate today = LocalDate.now();
+        LocalDate newResetDate = null;
+
+        if ("monthly".equalsIgnoreCase(budget.getBudgetType())) {
+            LocalDate nextResetDate = budget.getLastResetDate().plusMonths(1);
+
+            if (!today.isBefore(nextResetDate)) { // today >= nextResetDate
+                newResetDate = nextResetDate; // reset to next period start
+            }
+        } else if ("yearly".equalsIgnoreCase(budget.getBudgetType())) {
+            LocalDate nextResetDate = budget.getLastResetDate().plusYears(1);
+
+            if (!today.isBefore(nextResetDate)) { // today >= nextResetDate
+                newResetDate = nextResetDate;
+            }
+        }
+
+        if (newResetDate != null) {
+            budget.setSpentAmount(BigDecimal.ZERO);
+            budget.setLastResetDate(newResetDate);
+            budget = budgetRepository.save(budget);
+
+            System.out.println("[RESET] Budget for user " + budget.getUser().getId() +
+                    ", category=" + budget.getCategory() +
+                    ", type=" + budget.getBudgetType() +
+                    ", lastResetDate=" + newResetDate);
+        }
+
+        return budget;
     }
 
     // Force reset a budget (useful for testing or manual resets)
@@ -162,7 +153,7 @@ public class BudgetService {
             if (!budget.getUser().getId().equals(userId)) {
                 throw new IllegalArgumentException("Budget does not belong to the specified user.");
             }
-            
+
             budget.setSpentAmount(BigDecimal.ZERO);
             budget.setLastResetDate(getCurrentPeriodStart(budget.getBudgetType()));
             return budgetRepository.save(budget);
@@ -175,24 +166,23 @@ public class BudgetService {
     public List<Budget> getBudgetsNeedingReset() {
         List<Budget> allBudgets = budgetRepository.findAll();
         return allBudgets.stream()
-            .filter(this::budgetNeedsReset)
-            .toList();
+                .filter(this::budgetNeedsReset)
+                .toList();
     }
 
     // Check if a budget needs reset without actually resetting it
     private boolean budgetNeedsReset(Budget budget) {
         LocalDate today = LocalDate.now();
-        
+
         if ("monthly".equalsIgnoreCase(budget.getBudgetType())) {
             LocalDate currentMonthStart = YearMonth.from(today).atDay(1);
-            return budget.getLastResetDate() == null || 
-                   budget.getLastResetDate().isBefore(currentMonthStart);
-        } 
-        else if ("yearly".equalsIgnoreCase(budget.getBudgetType())) {
-            return budget.getLastResetDate() == null || 
-                   budget.getLastResetDate().getYear() < today.getYear();
+            return budget.getLastResetDate() == null ||
+                    budget.getLastResetDate().isBefore(currentMonthStart);
+        } else if ("yearly".equalsIgnoreCase(budget.getBudgetType())) {
+            return budget.getLastResetDate() == null ||
+                    budget.getLastResetDate().getYear() < today.getYear();
         }
-        
+
         return false;
     }
 

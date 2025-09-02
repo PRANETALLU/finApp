@@ -46,20 +46,24 @@ const Budget = () => {
         }
     };
 
-    const getDateRange = (budgetType) => {
+    const getDateRange = (budgetType, lastResetDate) => {
         const now = new Date();
         let start, end;
 
+        start = lastResetDate ? new Date(lastResetDate) : new Date(now.getFullYear(), now.getMonth(), 1);
+
         if (budgetType === "monthly") {
-            start = new Date(now.getFullYear(), now.getMonth(), 1);
-            end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+            end = new Date(start);
+            end.setMonth(end.getMonth() + 1);
+            end.setSeconds(end.getSeconds() - 1); // end of period
         } else if (budgetType === "yearly") {
-            start = new Date(now.getFullYear(), 0, 1);
-            end = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+            end = new Date(start);
+            end.setFullYear(end.getFullYear() + 1);
+            end.setSeconds(end.getSeconds() - 1);
         } else {
-            // fallback if needed
-            start = new Date(now.getFullYear(), now.getMonth(), 1);
-            end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+            end = new Date(start);
+            end.setMonth(end.getMonth() + 1);
+            end.setSeconds(end.getSeconds() - 1);
         }
 
         return {
@@ -68,9 +72,10 @@ const Budget = () => {
         };
     };
 
-    const syncBudgetWithExpenses = async (budgetId, category, budgetType) => {
+
+    const syncBudgetWithExpenses = async (budgetId, category, budgetType, lastResetDate) => {
         try {
-            const { startDate, endDate } = getDateRange(budgetType);
+            const { startDate, endDate } = getDateRange(budgetType, lastResetDate);
 
             const expenseResponse = await axios.get(
                 `http://localhost:8080/api/transactions/total/filter`,
@@ -94,6 +99,28 @@ const Budget = () => {
             console.error("Error syncing budget with expenses:", error);
         }
     };
+
+    // Sync budgets only once after initial fetch
+    useEffect(() => {
+        const autoSyncBudgets = async () => {
+            if (!isLoading && budgets.length > 0) {
+                const syncPromises = budgets.map((budget) =>
+                    syncBudgetWithExpenses(budget.id, budget.category, budget.budgetType, budget.lastResetDate)
+                );
+                try {
+                    await Promise.all(syncPromises);
+                    // No fetchBudgets() here to avoid infinite loop
+                } catch (error) {
+                    console.error("Failed to auto-sync budgets:", error);
+                }
+            }
+        };
+
+        autoSyncBudgets();
+    }, [isLoading]); // only depend on isLoading, not budgets
+
+
+
 
 
     const syncAllBudgets = async () => {
@@ -234,34 +261,30 @@ const Budget = () => {
 
     const getResetInfo = (budget) => {
         if (typeof window === 'undefined') {
-            return {
-                lastReset: 'Loading...',
-                nextReset: 'Loading...',
-                daysUntil: 0
-            };
+            return { lastReset: 'Loading...', nextReset: 'Loading...', daysUntil: 0 };
         }
 
         const now = new Date();
         const lastReset = new Date(budget.lastResetDate);
 
+        let nextReset;
         if (budget.budgetType === 'monthly') {
-            const nextReset = new Date(lastReset.getFullYear(), lastReset.getMonth() + 1, 1);
-            const daysUntilReset = Math.ceil((nextReset - now) / (1000 * 60 * 60 * 24));
-            return {
-                lastReset: lastReset.toLocaleDateString(),
-                nextReset: nextReset.toLocaleDateString(),
-                daysUntil: Math.max(0, daysUntilReset)
-            };
-        } else {
-            const nextReset = new Date(lastReset.getFullYear() + 1, 0, 1);
-            const daysUntilReset = Math.ceil((nextReset - now) / (1000 * 60 * 60 * 24));
-            return {
-                lastReset: lastReset.toLocaleDateString(),
-                nextReset: nextReset.toLocaleDateString(),
-                daysUntil: Math.max(0, daysUntilReset)
-            };
+            nextReset = new Date(lastReset);
+            nextReset.setMonth(nextReset.getMonth() + 1);
+        } else if (budget.budgetType === 'yearly') {
+            nextReset = new Date(lastReset);
+            nextReset.setFullYear(nextReset.getFullYear() + 1);
         }
+
+        const daysUntilReset = Math.ceil((nextReset - now) / (1000 * 60 * 60 * 24));
+
+        return {
+            lastReset: lastReset.toLocaleDateString(),
+            nextReset: nextReset.toLocaleDateString(),
+            daysUntil: Math.max(0, daysUntilReset)
+        };
     };
+
 
     const filteredBudgets = budgets.filter(budget => {
         const matchesCategory = filterCategory === '' || budget.category === filterCategory;

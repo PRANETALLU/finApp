@@ -107,6 +107,26 @@ public class TransactionController {
         return ResponseEntity.ok(totalExpenses);
     }
 
+    @GetMapping("/total/filter")
+    public ResponseEntity<BigDecimal> getTotalByFilters(
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String category,
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+
+        // Get logged-in user
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userService.findByUsername(username);
+        Long userId = user.getId();
+
+        LocalDateTime start = LocalDateTime.parse(startDate);
+        LocalDateTime end = LocalDateTime.parse(endDate);
+
+        BigDecimal total = transactionService.getTotalByTypeCategoryAndDateRange(userId, type, category, start, end);
+
+        return ResponseEntity.ok(total);
+    }
+
     @GetMapping("/total/range")
     public ResponseEntity<BigDecimal> getTotalAmountByTypeAndDateRange(
             @RequestParam Long userId,

@@ -2,6 +2,7 @@ package com.example.demo.model;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,36 +17,41 @@ public class Budget {
     private User user;
 
     private String category;  // E.g., "Groceries", "Entertainment"
-    
-    private BigDecimal amount;  // Set budget amount
 
-    private String description; // Description
-    
-    private BigDecimal spentAmount = BigDecimal.ZERO;  // Track spent amount, default to 0
+    @Column(nullable = false)
+    private BigDecimal amount;  // Budgeted amount
 
+    private String description; // Optional description
+
+    @Column(nullable = false)
+    private BigDecimal spentAmount = BigDecimal.ZERO;  // Track spent amount
+
+    @Column(nullable = false)
     private String budgetType;  // "monthly" or "yearly"
 
-    private LocalDateTime startDate; // Start date (e.g., first of the month)
-    private LocalDateTime endDate;   // End date (e.g., last day of the month or year)
+    // Track when this budget was last reset
+    private LocalDate lastResetDate;
 
-    // Constructors, getters, setters
+    // --- Constructors ---
     public Budget() {}
 
-    public Budget(User user, String category, BigDecimal amount, String description, String budgetType, LocalDateTime startDate, LocalDateTime endDate) {
+    public Budget(User user, String category, BigDecimal amount, String description, String budgetType) {
         this.user = user;
         this.category = category;
         this.amount = amount;
         this.description = description;
         this.budgetType = budgetType;
-        this.startDate = startDate;
-        this.endDate = endDate;
+        this.spentAmount = BigDecimal.ZERO;
+        this.lastResetDate = LocalDate.now();
     }
 
+    // --- Utility ---
     @Transient
     public BigDecimal getRemainingAmount() {
         return amount.subtract(spentAmount);
     }
 
+    // --- Getters & Setters ---
     public Long getId() {
         return id;
     }
@@ -78,20 +84,20 @@ public class Budget {
         this.amount = amount;
     }
 
-    public BigDecimal getSpentAmount() {
-        return spentAmount;
-    }
-
-    public void setSpentAmount(BigDecimal spentAmount) {
-        this.spentAmount = spentAmount;
-    }
-
     public String getDescription() {
         return description;
     }
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public BigDecimal getSpentAmount() {
+        return spentAmount;
+    }
+
+    public void setSpentAmount(BigDecimal spentAmount) {
+        this.spentAmount = spentAmount;
     }
 
     public String getBudgetType() {
@@ -102,35 +108,26 @@ public class Budget {
         this.budgetType = budgetType;
     }
 
-    public LocalDateTime getStartDate() {
-        return startDate;
+    public LocalDate getLastResetDate() {
+        return lastResetDate;
     }
 
-    public void setStartDate(LocalDateTime startDate) {
-        this.startDate = startDate;
-    }
-
-    public LocalDateTime getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(LocalDateTime endDate) {
-        this.endDate = endDate;
+    public void setLastResetDate(LocalDate lastResetDate) {
+        this.lastResetDate = lastResetDate;
     }
 
     @Override
     public String toString() {
         return "Budget{" +
                 "id=" + id +
-                ", user=" + user.getId() +
+                ", user=" + (user != null ? user.getId() : null) +
                 ", category='" + category + '\'' +
                 ", amount=" + amount +
                 ", spentAmount=" + spentAmount +
                 ", remainingAmount=" + getRemainingAmount() +
                 ", description='" + description + '\'' +
                 ", budgetType='" + budgetType + '\'' +
-                ", startDate=" + startDate +
-                ", endDate=" + endDate +
+                ", lastResetDate=" + lastResetDate +
                 '}';
     }
 }

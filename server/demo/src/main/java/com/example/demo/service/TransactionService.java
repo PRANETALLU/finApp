@@ -76,4 +76,17 @@ public class TransactionService {
     public BigDecimal getTotalExpensesByCategory(Long userId, String category) {
         return transactionRepository.getTotalExpensesByCategory(userId, category);
     }
+
+    public BigDecimal getTotalByTypeCategoryAndDateRange(Long userId, String type, String category,
+            LocalDateTime startDate, LocalDateTime endDate) {
+        // Normalize type if provided
+        String normalizedType = null;
+        if (type != null && (type.equalsIgnoreCase("INCOME") || type.equalsIgnoreCase("EXPENSE"))) {
+            normalizedType = type.toUpperCase();
+        }
+
+        return transactionRepository.getTotalByTypeCategoryAndDateRange(
+                userId, normalizedType, category, startDate, endDate);
+    }
+
 }
